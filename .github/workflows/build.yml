@@ -68,6 +68,7 @@ jobs:
           $state = @{ acct = "guest"; nm = "Aidyn"; done = 1; gl = "Rank up, Learn to code, Sleep better";
             dn = @{ ($today + "gaming") = @(0, 1); ($today + "sleep") = @(0,1,2,3,4) };
             ok = @{ ("sleep" + $today) = 1 } } | ConvertTo-Json -Depth 5
+          New-Item -ItemType Directory -Force "$env:LOCALAPPDATA\DailyPlanner" | Out-Null
           Set-Content -Path "$env:LOCALAPPDATA\DailyPlanner\planner.json" -Value $state
           $p = Start-Process -FilePath publish\DailyPlanner.exe -PassThru
           Start-Sleep -Seconds 20
