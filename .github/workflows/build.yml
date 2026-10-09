@@ -1,0 +1,51 @@
+# Builds the Windows app on GitHub's Windows computers every time code is pushed.
+# Pushes to main also publish a new release with DailyPlannerSetup.exe.
+name: Build Windows app
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Build the app
+        run: dotnet publish src/DailyPlanner/DailyPlanner.csproj -c Release -r win-x64 -p:Platform=x64 -p:Version=1.0.${{ github.run_number }} -o publish
+
+      - name: Make the installer
+        shell: pwsh
+        run: |
+          $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) { choco install innosetup -y --no-progress | Out-Null }
+          & $iscc "/DAppVersion=1.0.${{ github.run_number }}" installer\setup.iss
+          Compress-Archive -Path publish\* -DestinationPath out\DailyPlanner-portable.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: DailyPlanner-windows
+          path: out/*
+
+      - name: Publish a release
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Daily Planner 1.0.${{ github.run_number }}
+          body: |
+            Download **DailyPlannerSetup.exe** below and run it to install Daily Planner on Windows.
+            If Windows shows "Windows protected your PC", click **More info** then **Run anyway**.
+          files: |
+            out/DailyPlannerSetup.exe
+            out/DailyPlanner-portable.zip

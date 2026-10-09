@@ -1,0 +1,68 @@
+<Page
+    x:Class="DailyPlanner.Pages.SettingsPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto">
+        <StackPanel Padding="36,28,36,36" Spacing="16" MaxWidth="760" HorizontalAlignment="Stretch">
+            <StackPanel.ChildrenTransitions>
+                <TransitionCollection><EntranceThemeTransition IsStaggeringEnabled="True" /></TransitionCollection>
+            </StackPanel.ChildrenTransitions>
+
+            <StackPanel Spacing="2">
+                <TextBlock Text="SETTINGS" Style="{StaticResource Eyebrow}" />
+                <TextBlock Text="Make it yours" FontSize="32" FontWeight="SemiBold" />
+            </StackPanel>
+
+            <!-- Account -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="12">
+                    <TextBlock Text="Account" FontSize="16" FontWeight="SemiBold" />
+                    <Grid ColumnSpacing="14">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                        </Grid.ColumnDefinitions>
+                        <PersonPicture x:Name="Avatar" Width="48" Height="48" />
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                            <TextBlock x:Name="AcctName" FontWeight="SemiBold" TextWrapping="Wrap" />
+                            <TextBlock x:Name="AcctInfo" Style="{StaticResource Muted}" />
+                        </StackPanel>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="SyncNow" Content="Sync now" Click="SyncNow_Click" />
+                        <Button x:Name="SignInOut" Click="SignInOut_Click" />
+                    </StackPanel>
+                    <TextBlock x:Name="SyncInfo" Style="{StaticResource Muted}" FontSize="12" />
+                </StackPanel>
+            </Border>
+
+            <!-- Appearance -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="Appearance" FontSize="16" FontWeight="SemiBold" />
+                    <RadioButtons x:Name="ThemePick" Header="Look" SelectionChanged="ThemePick_SelectionChanged" MaxColumns="3">
+                        <x:String>Match Windows</x:String>
+                        <x:String>Light</x:String>
+                        <x:String>Dark</x:String>
+                    </RadioButtons>
+                </StackPanel>
+            </Border>
+
+            <!-- More -->
+            <Border Style="{StaticResource Card}">
+                <StackPanel Spacing="10">
+                    <TextBlock Text="More settings" FontSize="16" FontWeight="SemiBold" />
+                    <TextBlock Style="{StaticResource Muted}" Text="Your game, free days, reminders, theme color, the leaderboard and your data are on the website for now. Changes sync to this app." />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="Open website settings" Click="WebSettings_Click" />
+                        <Button Content="Open data folder" Click="Folder_Click" />
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <TextBlock x:Name="VersionText" Style="{StaticResource Muted}" FontSize="12" HorizontalAlignment="Center" />
+        </StackPanel>
+    </ScrollViewer>
+</Page>

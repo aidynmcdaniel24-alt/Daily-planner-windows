@@ -1,0 +1,50 @@
+<Page
+    x:Class="DailyPlanner.Pages.ShellPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    Background="Transparent">
+
+    <Grid>
+        <NavigationView x:Name="Nav"
+                        PaneDisplayMode="Left"
+                        IsBackButtonVisible="Collapsed"
+                        IsSettingsVisible="True"
+                        OpenPaneLength="220"
+                        SelectionChanged="Nav_SelectionChanged"
+                        ItemInvoked="Nav_ItemInvoked">
+            <NavigationView.MenuItems>
+                <NavigationViewItem Content="Home" Tag="home">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE80F;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
+                <NavigationViewItem x:Name="NavGaming" Content="Gaming" Tag="gaming">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE7FC;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="NavSleep" Content="Sleep" Tag="sleep">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE708;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItem x:Name="NavCoding" Content="Coding" Tag="coding">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE943;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.MenuItems>
+            <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Open the website" Tag="web" SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+            </NavigationView.FooterMenuItems>
+
+            <Grid>
+                <Frame x:Name="PageFrame" />
+                <!-- Pops up when a checklist is finished -->
+                <InfoBar x:Name="Toast" IsOpen="False" Severity="Success" IsClosable="True"
+                         HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24" MaxWidth="460" />
+                <!-- Saving indicator -->
+                <StackPanel x:Name="SyncBadge" Orientation="Horizontal" Spacing="8" Opacity="0"
+                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,22,0">
+                    <ProgressRing IsActive="True" Width="14" Height="14" />
+                    <TextBlock Text="Saving" FontSize="12" Style="{StaticResource Muted}" />
+                </StackPanel>
+            </Grid>
+        </NavigationView>
+    </Grid>
+</Page>
