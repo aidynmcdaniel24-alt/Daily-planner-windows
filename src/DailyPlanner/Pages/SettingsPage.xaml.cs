@@ -181,7 +181,7 @@ public sealed partial class SettingsPage : Page
         {
             int idx = i;
             days.ColumnDefinitions.Add(new ColumnDefinition());
-            var b = new ToggleButton { Content = names[i], IsChecked = fd.Contains(i), HorizontalAlignment = HorizontalAlignment.Stretch, CornerRadius = new CornerRadius(99) };
+            var b = UI.Chip(names[i], fd.Contains(i));
             b.Click += (s, e) =>
             {
                 var cur = (Store.St["fd"] as JsonArray)?.Select(x => (int)Store.Num(x)).ToList() ?? new List<int> { 0, 1, 2 };
@@ -191,6 +191,12 @@ public sealed partial class SettingsPage : Page
             };
             Grid.SetColumn(b, i); days.Children.Add(b);
         }
+        // Short day letters when the window is narrow
+        days.SizeChanged += (s, e) =>
+        {
+            bool tiny = e.NewSize.Width < 420;
+            for (int i = 0; i < 7; i++) if (days.Children[i] is ToggleButton tb) tb.Content = tiny ? names[i][..1] : names[i];
+        };
         return UI.Card("", "Game and schedule", "What you play and which days you have more time.", UI.Lane("gaming"), null,
             game, type, UI.M("This picks your drills and score labels. Change it if we guessed wrong.", 12), aiStatus,
             UI.T("Full days (longer routine)", 13, true), days);

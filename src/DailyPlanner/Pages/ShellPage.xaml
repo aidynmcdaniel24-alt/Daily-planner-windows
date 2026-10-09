@@ -6,7 +6,9 @@
 
     <Grid>
         <NavigationView x:Name="Nav"
-                        PaneDisplayMode="Left"
+                        PaneDisplayMode="Auto"
+                        CompactModeThresholdWidth="900"
+                        ExpandedModeThresholdWidth="1100"
                         IsBackButtonVisible="Collapsed"
                         IsSettingsVisible="True"
                         OpenPaneLength="220"

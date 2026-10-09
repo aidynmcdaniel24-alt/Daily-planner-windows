@@ -1,6 +1,7 @@
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Controls.Primitives;
 using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Windows.UI;
@@ -96,14 +97,67 @@ public static class UI
         return b;
     }
 
-    // Two equal columns that stack on narrow windows
+    // Two equal columns that stack on top of each other when there isn't room
     public static Grid Two(FrameworkElement a, FrameworkElement b, double gap = 12)
     {
-        var g = new Grid { ColumnSpacing = gap };
+        var g = new Grid { ColumnSpacing = gap, RowSpacing = gap };
         g.ColumnDefinitions.Add(new ColumnDefinition());
         g.ColumnDefinitions.Add(new ColumnDefinition());
-        g.Children.Add(a); Grid.SetColumn(b, 1); g.Children.Add(b);
+        g.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        g.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+        g.Children.Add(a); g.Children.Add(b);
+        void Fit(double w)
+        {
+            bool stack = w > 0 && w < 380;
+            Grid.SetColumn(b, stack ? 0 : 1); Grid.SetRow(b, stack ? 1 : 0);
+            Grid.SetColumnSpan(a, stack ? 2 : 1); Grid.SetColumnSpan(b, stack ? 2 : 1);
+        }
+        Fit(1000);
+        g.SizeChanged += (s, e) => Fit(e.NewSize.Width);
         return g;
+    }
+
+    // Lays out boxes in as many columns as fit (like the website's tiles)
+    public static Grid Wrap(IList<FrameworkElement> items, double minWidth, double gap = 12)
+    {
+        var g = new Grid { ColumnSpacing = gap, RowSpacing = gap };
+        foreach (var it in items) g.Children.Add(it);
+        int lastCols = -1;
+        void Fit(double w)
+        {
+            int cols = Math.Max(1, Math.Min(items.Count, (int)((w + gap) / (minWidth + gap))));
+            if (cols == lastCols) return; lastCols = cols;
+            g.ColumnDefinitions.Clear(); g.RowDefinitions.Clear();
+            for (int c = 0; c < cols; c++) g.ColumnDefinitions.Add(new ColumnDefinition());
+            for (int r = 0; r < (items.Count + cols - 1) / cols; r++) g.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
+            for (int i = 0; i < items.Count; i++) { Grid.SetColumn(items[i], i % cols); Grid.SetRow(items[i], i / cols); }
+        }
+        Fit(900);
+        g.SizeChanged += (s, e) => Fit(e.NewSize.Width);
+        return g;
+    }
+
+    // Choice chips (like the day picker): rounded, outlined, and tinted with a check when picked
+    public static ToggleButton Chip(string text, bool on)
+    {
+        var b = new ToggleButton { Content = text, IsChecked = on, HorizontalAlignment = HorizontalAlignment.Stretch, CornerRadius = new CornerRadius(8), Padding = new Thickness(6, 7, 6, 8), MinWidth = 0 };
+        // Soft look: outlined when off, light purple tint + purple text when on (not a solid fill)
+        var tint = new SolidColorBrush(Color.FromArgb(0x2E, 0x6D, 0x5C, 0xFF));
+        var tintHover = new SolidColorBrush(Color.FromArgb(0x40, 0x6D, 0x5C, 0xFF));
+        var accent = new SolidColorBrush(Color.FromArgb(0xFF, 0x8B, 0x7D, 0xFF));
+        var r = b.Resources;
+        r["ToggleButtonBackgroundChecked"] = tint;
+        r["ToggleButtonBackgroundCheckedPointerOver"] = tintHover;
+        r["ToggleButtonBackgroundCheckedPressed"] = tint;
+        r["ToggleButtonForegroundChecked"] = accent;
+        r["ToggleButtonForegroundCheckedPointerOver"] = accent;
+        r["ToggleButtonForegroundCheckedPressed"] = accent;
+        r["ToggleButtonBorderBrushChecked"] = accent;
+        r["ToggleButtonBorderBrushCheckedPointerOver"] = accent;
+        r["ToggleButtonBorderBrushCheckedPressed"] = accent;
+        r["ToggleButtonBackground"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        b.BorderThickness = new Thickness(1);
+        return b;
     }
 
     // A scrolling page with a two-column layout on wide windows
@@ -133,8 +187,8 @@ public static class UI
 
         void Fit(double w)
         {
-            bool narrow = w < 900;
-            all.Padding = narrow ? new Thickness(18, 20, 18, 28) : new Thickness(36, 28, 36, 36);
+            bool narrow = w < 860;
+            all.Padding = w < 600 ? new Thickness(14, 16, 14, 24) : narrow ? new Thickness(22, 22, 22, 30) : new Thickness(36, 28, 36, 36);
             Grid.SetColumn(Side, narrow ? 0 : 1); Grid.SetRow(Side, narrow ? 1 : 0);
             Grid.SetColumnSpan(Main, narrow ? 2 : 1); Grid.SetColumnSpan(Side, narrow ? 2 : 1);
         }

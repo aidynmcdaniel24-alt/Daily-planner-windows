@@ -11,7 +11,7 @@ namespace DailyPlanner.Pages;
 public sealed partial class SummaryPage : Page
 {
     readonly UI.Layout L = new();
-    readonly Grid tiles = new() { ColumnSpacing = 12, RowSpacing = 12 };
+    readonly ContentControl tiles = new() { HorizontalContentAlignment = HorizontalAlignment.Stretch };
     readonly StackPanel charts = new() { Spacing = 14 };
     readonly StackPanel cal = new() { Spacing = 8 };
     readonly TextBlock monthTitle = UI.T("", 16, true);
@@ -85,18 +85,15 @@ public sealed partial class SummaryPage : Page
             ("CALM SESSIONS", s.Count > 0 ? Math.Round(100.0 * calm / s.Count) + "%" : "–", s.Count > 0 ? $"{calm} of {s.Count} this week" : "Log sessions to see this"),
             ("CODING LOGS", Store.Arr("tc").Count.ToString(), "Everything you've logged"),
         };
-        tiles.Children.Clear(); tiles.ColumnDefinitions.Clear();
-        for (int i = 0; i < T.Count; i++)
-        {
-            tiles.ColumnDefinitions.Add(new ColumnDefinition());
-            var b = new Border
+        var boxes = new List<FrameworkElement>();
+        foreach (var t in T)
+            boxes.Add(new Border
             {
                 Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1),
                 CornerRadius = new CornerRadius(14), Padding = new Thickness(16),
-                Child = UI.Stack(2, UI.T(T[i].Item1, 11, true, UI.Muted), UI.T(T[i].Item2, 26, true), UI.M(T[i].Item3, 12)),
-            };
-            Grid.SetColumn(b, i); tiles.Children.Add(b);
-        }
+                Child = UI.Stack(2, UI.T(t.Item1, 11, true, UI.Muted), UI.T(t.Item2, 26, true), UI.M(t.Item3, 12)),
+            });
+        tiles.Content = UI.Wrap(boxes, 150);
     }
 
     void DrawCharts()
