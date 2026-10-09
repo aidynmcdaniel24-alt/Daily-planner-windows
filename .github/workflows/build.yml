@@ -61,6 +61,21 @@ jobs:
           }
           Write-Host "App is running"
           Stop-Process -Id $p.Id
+          Start-Sleep -Seconds 2
+
+          # Second run: as a guest with sample data, to check the home screen
+          $today = Get-Date -Format "yyyy-MM-dd"
+          $state = @{ acct = "guest"; nm = "Aidyn"; done = 1; gl = "Rank up, Learn to code, Sleep better";
+            dn = @{ ($today + "gaming") = @(0, 1); ($today + "sleep") = @(0,1,2,3,4) };
+            ok = @{ ("sleep" + $today) = 1 } } | ConvertTo-Json -Depth 5
+          Set-Content -Path "$env:LOCALAPPDATA\DailyPlanner\planner.json" -Value $state
+          $p = Start-Process -FilePath publish\DailyPlanner.exe -PassThru
+          Start-Sleep -Seconds 20
+          $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+          $bmp.Save("smoke\home.png")
+          if (Test-Path $log) { Copy-Item $log smoke\errors.log -Force; $t = (Get-Content $log -Raw) -replace "`r",'' -replace "`n",'%0A'; Write-Host "::warning title=errors.log after home::$t" }
+          if ($p.HasExited) { Write-Host "::error::Home screen closed by itself (exit code $($p.ExitCode))"; exit 1 }
+          Stop-Process -Id $p.Id
 
       - name: Save the smoke test screenshot to the smoke-results branch
         if: always()
