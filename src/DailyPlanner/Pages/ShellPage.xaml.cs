@@ -25,8 +25,8 @@ public sealed partial class ShellPage : Page
         var args = Environment.GetCommandLineArgs();
         int pi = Array.IndexOf(args, "--page");
         string start = pi > 0 && pi + 1 < args.Length ? args[pi + 1] : "home";
-        if (start == "settings") Nav.SelectedItem = Nav.SettingsItem;
-        else Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => i.Tag?.ToString() == start) ?? Nav.MenuItems[0];
+        if (start == "settings") Nav.Loaded += (s, e) => Nav.SelectedItem = Nav.SettingsItem;
+        Nav.SelectedItem = Nav.MenuItems.OfType<NavigationViewItem>().FirstOrDefault(i => i.Tag?.ToString() == start) ?? Nav.MenuItems[0];
 
         // Keyboard shortcuts: 1-5 open tabs, F focus mode, N next task
         void Key(VirtualKey k, Action a, VirtualKeyModifiers m = VirtualKeyModifiers.None)
