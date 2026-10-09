@@ -163,7 +163,14 @@ public static class UI
         int lastCols = -1;
         void Fit(double w)
         {
-            int cols = Math.Max(1, Math.Min(items.Count, (int)((w + gap) / (minWidth + gap))));
+            int max = Math.Max(1, Math.Min(items.Count, (int)((w + gap) / (minWidth + gap))));
+            // pick the column count that leaves the fewest empty spots (no lonely last box)
+            int cols = max, best = int.MaxValue;
+            for (int c = max; c >= Math.Max(1, max - 2); c--)
+            {
+                int empty = (items.Count + c - 1) / c * c - items.Count;
+                if (empty < best) { best = empty; cols = c; }
+            }
             if (cols == lastCols) return; lastCols = cols;
             g.ColumnDefinitions.Clear(); g.RowDefinitions.Clear();
             for (int c = 0; c < cols; c++) g.ColumnDefinitions.Add(new ColumnDefinition());

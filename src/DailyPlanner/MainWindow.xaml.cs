@@ -20,6 +20,7 @@ public sealed partial class MainWindow : Window
         WindowPlace.Restore(AppWindow);
         Closed += (s, e) => WindowPlace.Save(AppWindow);
         if (AppWindow.Presenter is OverlappedPresenter p) { p.PreferredMinimumWidth = 420; p.PreferredMinimumHeight = 560; }
+        UseOurColors();
         Theme.Apply(RootGrid, AppWindow);
     }
 
@@ -40,4 +41,24 @@ public sealed partial class MainWindow : Window
     }
 
     public FrameworkElement Root => RootGrid;
+
+    // WinUI's built-in controls only pick up our colors when they're set close to them,
+    // so copy the app's light/dark colors onto the window's root too.
+    void UseOurColors()
+    {
+        try
+        {
+            var app = Application.Current.Resources.ThemeDictionaries;
+            var rd = new ResourceDictionary();
+            foreach (var t in new[] { "Dark", "Light" })
+            {
+                if (!app.TryGetValue(t, out var src) || src is not ResourceDictionary from) continue;
+                var copy = new ResourceDictionary();
+                foreach (var kv in from) copy[kv.Key] = kv.Value;
+                rd.ThemeDictionaries[t] = copy;
+            }
+            RootGrid.Resources.MergedDictionaries.Add(rd);
+        }
+        catch (Exception ex) { App.Log("Colors: " + ex.Message); }
+    }
 }

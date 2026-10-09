@@ -88,7 +88,7 @@ public sealed partial class SummaryPage : Page
         var boxes = new List<FrameworkElement>();
         foreach (var t in T)
             boxes.Add(UI.Tile(t.Item1, t.Item2, t.Item3));
-        tiles.Content = UI.Wrap(boxes, 150);
+        tiles.Content = UI.Wrap(boxes, 128);
     }
 
     void DrawCharts()
