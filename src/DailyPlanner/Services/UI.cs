@@ -248,5 +248,13 @@ public static class UI
         return pl;
     }
 
+    // A stat tile like the website's (label, big number, small note)
+    public static Border Tile(string label, string value, string sub) => new()
+    {
+        Background = Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1),
+        CornerRadius = new CornerRadius(14), Padding = new Thickness(16),
+        Child = Stack(2, T(label.ToUpperInvariant(), 11, true, Muted), T(value, 26, true), M(sub, 12)),
+    };
+
     public static string Plural(int n, string one, string many) => n + " " + (n == 1 ? one : many);
 }

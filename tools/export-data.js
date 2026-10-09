@@ -6,6 +6,6 @@ const web = process.argv[2], out = process.argv[3];
 const localStorage = { getItem: () => null, setItem: () => {} };
 const src = fs.readFileSync(path.join(web, "genres.js"), "utf8") + "\n" +
   fs.readFileSync(path.join(web, "content.js"), "utf8").replace(/var CONTENT[^\n]*\n/, "");
-const X = new Function("localStorage", src + "; return {GENRES,GENRE_ORDER,GAMES,GAME_FOCUS,RANKS,DEFAULT_CONTENT,VERSE_TEXT,PROJECTS};")(localStorage);
+const X = new Function("localStorage", src + "; return {GENRES,GENRE_ORDER,GAMES,GAME_FOCUS,RANKS,DEFAULT_CONTENT,VERSE_TEXT,PROJECTS,CODE_DRILLS,CODE_TIPS,CODE_SITES};")(localStorage);
 fs.writeFileSync(out, JSON.stringify(X));
 console.log("Wrote " + out + " (" + fs.statSync(out).size + " bytes)");

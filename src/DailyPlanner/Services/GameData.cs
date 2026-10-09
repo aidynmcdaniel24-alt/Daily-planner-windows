@@ -108,6 +108,20 @@ public static class GameData
 
     public static List<string> GameFocus(string game) => Strings(Data["GAME_FOCUS"]?[game]);
 
+    // ---------- Coding drills, tips and helpful sites ----------
+    public record CodeDrill(Drill Drill, List<string> Paths);
+    public record Site(string Name, string Url, string Desc, string Group, List<string> Paths);
+
+    public static List<CodeDrill> CodeDrills() =>
+        ((Data["CODE_DRILLS"] as JsonArray) ?? new JsonArray()).OfType<JsonObject>().Select(d => new CodeDrill(new Drill(
+            d["name"]?.ToString() ?? "", d["time"]?.ToString() ?? "", Strings(d["steps"]), d["tip"]?.ToString() ?? "", new()), Strings(d["paths"]))).ToList();
+
+    public static List<string> CodeTips() => Strings(Data["CODE_TIPS"]);
+
+    public static List<Site> CodeSites() =>
+        ((Data["CODE_SITES"] as JsonArray) ?? new JsonArray()).OfType<JsonArray>().Where(a => a.Count >= 5)
+            .Select(a => new Site(a[0]!.ToString(), a[1]!.ToString(), a[2]!.ToString(), a[3]!.ToString(), Strings(a[4]))).ToList();
+
     // [type, title, description] — type "p" is Python, "w" is web
     public static List<(string Type, string Title, string Desc)> Projects() =>
         ((Data["PROJECTS"] as JsonArray) ?? new JsonArray()).OfType<JsonArray>()

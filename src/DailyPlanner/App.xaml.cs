@@ -45,7 +45,7 @@ public partial class App : Application
             Store.Load();
             Notify.Start();
             Window = new MainWindow();
-            Window.Closed += (s, e) => Notify.Stop();
+            Window.Closed += (s, e) => { FocusTimer.Finish(); Notify.Stop(); };
             Store.Ui = Window.DispatcherQueue;
             Window.Activate();
             Window.Start();

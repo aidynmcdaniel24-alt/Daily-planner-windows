@@ -136,7 +136,7 @@ public sealed partial class GamingPage : Page
         foreach (var d in GameData.Drills(G).Where(d => d.Name != today.Name)) allDrills.Children.Add(DrillView(d));
     }
 
-    static UIElement DrillView(Drill d)
+    internal static UIElement DrillView(Drill d, string lane = "gaming")
     {
         var head = new Grid();
         head.Children.Add(UI.T(d.Name, 17, true));
@@ -147,13 +147,13 @@ public sealed partial class GamingPage : Page
             var g = new Grid { ColumnSpacing = 10 };
             g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
             g.ColumnDefinitions.Add(new ColumnDefinition());
-            g.Children.Add(new Border { Width = 24, Height = 24, CornerRadius = new CornerRadius(12), Background = UI.Tint(UI.Lane("gaming"), 0.15), VerticalAlignment = VerticalAlignment.Top,
-                Child = new TextBlock { Text = (i + 1).ToString(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = UI.Lane("gaming"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
+            g.Children.Add(new Border { Width = 24, Height = 24, CornerRadius = new CornerRadius(12), Background = UI.Tint(UI.Lane(lane), 0.15), VerticalAlignment = VerticalAlignment.Top,
+                Child = new TextBlock { Text = (i + 1).ToString(), FontSize = 12, FontWeight = FontWeights.SemiBold, Foreground = UI.Lane(lane), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center } });
             var t = UI.T(d.Steps[i], 14); Grid.SetColumn(t, 1); g.Children.Add(t);
             s.Children.Add(g);
         }
         if (d.Tip.Length > 0)
-            s.Children.Add(new Border { Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(3, 0, 0, 0), BorderBrush = UI.Lane("gaming"),
+            s.Children.Add(new Border { Padding = new Thickness(12, 10, 12, 10), CornerRadius = new CornerRadius(8), BorderThickness = new Thickness(3, 0, 0, 0), BorderBrush = UI.Lane(lane),
                 Background = UI.Res("SubtleFillColorSecondaryBrush"), Child = UI.T("Tip: " + d.Tip, 13) });
         return s;
     }
