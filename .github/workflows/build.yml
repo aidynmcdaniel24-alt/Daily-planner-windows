@@ -100,6 +100,22 @@ jobs:
           }
           Stop-Process -Id $p.Id
 
+          # Open every page and take a screenshot of each
+          foreach ($pg in @("gaming","sleep","coding","summary","board","settings")) {
+            Remove-Item $log -ErrorAction SilentlyContinue
+            $p = Start-Process -FilePath publish\DailyPlanner.exe -ArgumentList "--page $pg" -PassThru
+            Start-Sleep -Seconds 12
+            $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $bmp.Save("smoke\$pg.png")
+            if (Test-Path $log) { $t = (Get-Content $log -Raw) -replace "`r",'' -replace "`n",'%0A'; if ($t.Length -gt 4000) { $t = $t.Substring(0,4000) }; Write-Host "::warning title=errors.log on $pg::$t" }
+            if ($p.HasExited) {
+              $ev = Get-WinEvent -LogName Application -MaxEvents 30 | Where-Object { $_.LevelDisplayName -eq 'Error' -and $_.ProviderName -ne 'Microsoft-Windows-Security-SPP' } | Select-Object -First 2
+              foreach ($e in $ev) { $m = ($e.ProviderName + ': ' + $e.Message) -replace "`r",'' -replace "`n",'%0A'; if ($m.Length -gt 3000) { $m = $m.Substring(0,3000) }; Write-Host "::error title=Windows event ($pg)::$m" }
+              Write-Host "::error::The $pg page closed by itself (exit code $($p.ExitCode))"; exit 1
+            }
+            Stop-Process -Id $p.Id; Start-Sleep -Seconds 2
+          }
+
       - uses: actions/upload-artifact@v4
         with:
           name: DailyPlanner-windows
