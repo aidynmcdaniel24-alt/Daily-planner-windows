@@ -11,7 +11,7 @@ using Windows.Storage.Pickers;
 namespace DailyPlanner.Pages;
 
 // ===== Settings: account, game, look, reminders, data =====
-public sealed class SettingsPage : Page
+public sealed partial class SettingsPage : Page
 {
     readonly StackPanel root = new() { Spacing = 16, MaxWidth = 780, Padding = new Thickness(36, 28, 36, 36) };
     readonly TextBlock syncInfo = UI.M("", 12);
@@ -21,6 +21,7 @@ public sealed class SettingsPage : Page
 
     public SettingsPage()
     {
+        InitializeComponent();
         Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         root.ChildrenTransitions = new Microsoft.UI.Xaml.Media.Animation.TransitionCollection { new Microsoft.UI.Xaml.Media.Animation.EntranceThemeTransition { IsStaggeringEnabled = true } };
     }

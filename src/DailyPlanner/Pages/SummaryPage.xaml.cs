@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Navigation;
 namespace DailyPlanner.Pages;
 
 // ===== Summary: stats, charts, calendar, notes, challenges, badges =====
-public sealed class SummaryPage : Page
+public sealed partial class SummaryPage : Page
 {
     readonly UI.Layout L = new();
     readonly Grid tiles = new() { ColumnSpacing = 12, RowSpacing = 12 };
@@ -26,6 +26,7 @@ public sealed class SummaryPage : Page
 
     public SummaryPage()
     {
+        InitializeComponent();
         Content = L.Root;
         L.Top.Children.Add(UI.PageTitle("Summary", "Your week", "How you're doing across gaming, sleep and coding."));
         L.Top.Children.Add(tiles);

@@ -10,7 +10,7 @@ using Microsoft.UI.Xaml.Navigation;
 namespace DailyPlanner.Pages;
 
 // ===== Gaming: checklist, drill guide, break timer, tilt, scores, rank, weekly review =====
-public sealed class GamingPage : Page
+public sealed partial class GamingPage : Page
 {
     readonly UI.Layout L = new();
     JsonObject G = new();
@@ -37,6 +37,7 @@ public sealed class GamingPage : Page
 
     public GamingPage()
     {
+        InitializeComponent();
         Content = L.Root;
         G = GameData.Genre(Store.St);
         L.Top.Children.Add(UI.PageTitle("Gaming", Store.FullDay ? "Full day" : "Busy day", Store.FullDay ? "The longer routine. Practice with a plan, then play." : "The short routine. A little practice still counts."));

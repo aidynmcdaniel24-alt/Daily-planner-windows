@@ -7,7 +7,7 @@ using Microsoft.UI.Xaml.Navigation;
 namespace DailyPlanner.Pages;
 
 // ===== Coding: practice checklist, learning log, today's project idea =====
-public sealed class CodingPage : Page
+public sealed partial class CodingPage : Page
 {
     readonly UI.Layout L = new();
     readonly TextBox entry = new() { PlaceholderText = "Example: finished CS50 week 1" };
@@ -19,6 +19,7 @@ public sealed class CodingPage : Page
 
     public CodingPage()
     {
+        InitializeComponent();
         Content = L.Root;
         L.Top.Children.Add(UI.PageTitle("Coding", "Code every day", "Small steps toward a career in tech."));
         L.Main.Children.Add(new ChecklistCard("coding"));

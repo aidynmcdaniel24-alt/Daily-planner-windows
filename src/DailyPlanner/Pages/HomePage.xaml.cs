@@ -11,7 +11,7 @@ using ContentData = DailyPlanner.Services.Content;
 namespace DailyPlanner.Pages;
 
 // ===== Home: greeting, next task, today's progress, quote =====
-public sealed class HomePage : Page
+public sealed partial class HomePage : Page
 {
     readonly StackPanel root = new() { Spacing = 18, MaxWidth = 1180 };
     readonly TextBlock date = UI.Eyebrow(""), hello = UI.T("", 38, true), sub = UI.M("", 15);
@@ -39,6 +39,7 @@ public sealed class HomePage : Page
 
     public HomePage()
     {
+        InitializeComponent();
         root.ChildrenTransitions = new Microsoft.UI.Xaml.Media.Animation.TransitionCollection { new Microsoft.UI.Xaml.Media.Animation.EntranceThemeTransition { IsStaggeringEnabled = true } };
         foreach (var b in new[] { setupBar, verifyBar, nudgeBar, bedBar }) b.Closed += (s, e) => { s.Visibility = Visibility.Collapsed; s.Tag = "closed"; };
         setupBar.ActionButton = UI.Btn("Open setup", () => { setupBar.Tag = "seen"; Process.Start(new ProcessStartInfo(Config.Website + "setup/") { UseShellExecute = true }); });

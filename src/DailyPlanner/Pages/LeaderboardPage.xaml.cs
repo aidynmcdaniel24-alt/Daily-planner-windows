@@ -10,7 +10,7 @@ using Windows.ApplicationModel.DataTransfer;
 namespace DailyPlanner.Pages;
 
 // ===== Leaderboard: friend code, friends ranked by streak, nudges =====
-public sealed class LeaderboardPage : Page
+public sealed partial class LeaderboardPage : Page
 {
     readonly StackPanel root = new() { Spacing = 16, MaxWidth = 760, Padding = new Thickness(36, 28, 36, 36) };
     readonly StackPanel body = new() { Spacing = 16 };
@@ -23,6 +23,7 @@ public sealed class LeaderboardPage : Page
 
     public LeaderboardPage()
     {
+        InitializeComponent();
         root.Children.Add(UI.PageTitle("Leaderboard", "Compete with friends", "Compare streaks, send a nudge, keep each other going."));
         root.Children.Add(body);
         Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };

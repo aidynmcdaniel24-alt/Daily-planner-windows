@@ -8,7 +8,7 @@ using Microsoft.UI.Xaml.Navigation;
 namespace DailyPlanner.Pages;
 
 // ===== Sleep: habits checklist, last night's sleep, 7-night chart =====
-public sealed class SleepPage : Page
+public sealed partial class SleepPage : Page
 {
     readonly UI.Layout L = new();
     readonly TimePicker bed = new() { Header = "Bedtime", MinuteIncrement = 5, HorizontalAlignment = HorizontalAlignment.Stretch };
@@ -21,6 +21,7 @@ public sealed class SleepPage : Page
 
     public SleepPage()
     {
+        InitializeComponent();
         Content = L.Root;
         L.Top.Children.Add(UI.PageTitle("Sleep", "Sleep better", "Wind down, protect your sleep, and wake up ready."));
         L.Top.Children.Add(bedtimeBar);
