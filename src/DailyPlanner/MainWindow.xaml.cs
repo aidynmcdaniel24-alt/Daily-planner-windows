@@ -11,7 +11,8 @@ public sealed partial class MainWindow : Window
 {
     public MainWindow()
     {
-        InitializeComponent();
+        try { InitializeComponent(); }
+        catch (Exception ex) { App.Log("MainWindow.xaml failed: " + ex); throw; }
         ExtendsContentIntoTitleBar = true;
         SetTitleBar(AppTitleBar);
         AppWindow.SetIcon(Path.Combine(AppContext.BaseDirectory, "Assets", "AppIcon.ico"));
@@ -27,11 +28,14 @@ public sealed partial class MainWindow : Window
         else ShowLogin();
     }
 
-    public void ShowLogin() =>
-        RootFrame.Navigate(typeof(LoginPage), null, new DrillInNavigationTransitionInfo());
+    public void ShowLogin() => Go(typeof(LoginPage));
+    public void ShowPlanner() => Go(typeof(ShellPage));
 
-    public void ShowPlanner() =>
-        RootFrame.Navigate(typeof(ShellPage), null, new DrillInNavigationTransitionInfo());
+    void Go(Type page)
+    {
+        try { RootFrame.Navigate(page, null, new DrillInNavigationTransitionInfo()); }
+        catch (Exception ex) { App.Log(page.Name + " failed: " + ex); throw; }
+    }
 
     public FrameworkElement Root => RootGrid;
 }

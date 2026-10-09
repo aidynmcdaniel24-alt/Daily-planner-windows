@@ -36,6 +36,8 @@ jobs:
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force smoke | Out-Null
+          $files = (Get-ChildItem publish -Recurse -Include *.pri,*.xbf,*.exe | ForEach-Object { $_.FullName.Replace((Resolve-Path publish).Path,'') }) -join ', '
+          Write-Host "::notice title=Published files::$files"
           $p = Start-Process -FilePath publish\DailyPlanner.exe -PassThru
           Start-Sleep -Seconds 25
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing

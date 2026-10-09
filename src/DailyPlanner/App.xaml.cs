@@ -7,23 +7,40 @@ public partial class App : Application
 {
     public static MainWindow? Window { get; private set; }
 
+    // Writes what happened at startup to %LocalAppData%\DailyPlanner\errors.log (helps find crashes)
+    public static void Log(string text)
+    {
+        try
+        {
+            Directory.CreateDirectory(Store.Folder);
+            File.AppendAllText(Path.Combine(Store.Folder, "errors.log"), DateTime.Now.ToString("s") + " " + text + Environment.NewLine);
+        }
+        catch { }
+    }
+
     public App()
     {
-        InitializeComponent();
+        AppDomain.CurrentDomain.UnhandledException += (s, e) => Log("Crash: " + e.ExceptionObject);
+        try { InitializeComponent(); }
+        catch (Exception ex) { Log("App.xaml failed: " + ex); throw; }
         UnhandledException += (s, e) =>
         {
-            // Keep the app open on unexpected errors and save what we can
+            // Keep the app open on unexpected errors and write them down
             e.Handled = true;
-            try { File.AppendAllText(Path.Combine(Store.Folder, "errors.log"), DateTime.Now + " " + e.Exception + Environment.NewLine); } catch { }
+            Log("Error: " + e.Exception);
         };
     }
 
     protected override void OnLaunched(LaunchActivatedEventArgs args)
     {
-        Store.Load();
-        Window = new MainWindow();
-        Store.Ui = Window.DispatcherQueue;
-        Window.Activate();
-        Window.Start();
+        try
+        {
+            Store.Load();
+            Window = new MainWindow();
+            Store.Ui = Window.DispatcherQueue;
+            Window.Activate();
+            Window.Start();
+        }
+        catch (Exception ex) { Log("Startup failed: " + ex); throw; }
     }
 }
