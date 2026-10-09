@@ -9,14 +9,14 @@ public static class Theme
     public static string Mode => Store.St["md"]?.ToString() ?? "auto";
     public static event Action? Changed;
     public static ApplicationTheme System { get; set; } = ApplicationTheme.Dark;   // what Windows is set to
-    public static ResourceDictionary? Colors;                                         // our colors, for pop-ups
+    public static ResourceDictionary? Palette;                                         // our colors, for pop-ups
 
     // Dialogs open outside the window's layout, so give them our colors and theme too
     public static Microsoft.UI.Xaml.Controls.ContentDialog Themed(this Microsoft.UI.Xaml.Controls.ContentDialog d) => Dress(d);
     public static T Dress<T>(T el) where T : FrameworkElement
     {
         el.RequestedTheme = IsDark ? ElementTheme.Dark : ElementTheme.Light;
-        if (Colors != null && !el.Resources.MergedDictionaries.Contains(Colors)) el.Resources.MergedDictionaries.Add(Colors);
+        if (Palette != null && !el.Resources.MergedDictionaries.Contains(Palette)) el.Resources.MergedDictionaries.Add(Palette);
         return el;
     }
 
