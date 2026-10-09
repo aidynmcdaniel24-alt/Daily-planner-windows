@@ -21,6 +21,15 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Add the Google sign-in secret
+        shell: pwsh
+        env:
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        run: |
+          if (-not $env:GOOGLE_CLIENT_SECRET) { Write-Host "::warning::GOOGLE_CLIENT_SECRET is not set, so Google sign-in will be off in this build."; exit 0 }
+          $code = "namespace DailyPlanner.Services;`npublic static partial class Config`n{`n    public const string GoogleClientSecret = `"$($env:GOOGLE_CLIENT_SECRET)`";`n}`n"
+          Set-Content -Path src\DailyPlanner\Services\Secrets.cs -Value $code
+
       - name: Build the app
         run: dotnet publish src/DailyPlanner/DailyPlanner.csproj -c Release -r win-x64 -p:Platform=x64 -p:Version=1.0.${{ github.run_number }} -o publish
 

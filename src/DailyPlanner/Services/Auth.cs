@@ -57,7 +57,7 @@ public static class Auth
             new JsonObject { ["requestType"] = "VERIFY_EMAIL", ["idToken"] = await Token() });
 
     // ---------- Google (opens the person's normal browser) ----------
-    public static bool GoogleReady => Config.GoogleClientId.Length > 0;
+    public static bool GoogleReady => Config.GoogleClientId.Length > 0 && Config.GoogleClientSecret.Length > 0;
 
     public static async Task SignInWithGoogle(CancellationToken cancel)
     {
