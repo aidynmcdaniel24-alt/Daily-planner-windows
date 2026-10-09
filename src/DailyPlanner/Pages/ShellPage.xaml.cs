@@ -82,10 +82,11 @@ public sealed partial class ShellPage : Page
     }
 
     static bool pulling;
+    static DateTime lastPull = DateTime.MinValue;
     static async Task Pull()
     {
-        if (pulling || Auth.Current == null || Store.Syncing) return;
-        pulling = true;
+        if (pulling || Auth.Current == null || Store.Syncing || (DateTime.Now - lastPull).TotalSeconds < 15) return;
+        pulling = true; lastPull = DateTime.Now;
         try { await Store.SyncDown(); } catch { }
         finally { pulling = false; }
     }
@@ -293,11 +294,12 @@ public sealed partial class ShellPage : Page
     void OnTheme()
     {
         BuildSidebar();
-        Navigate(current, true);
+        // reopen the page without an animation so it just changes color
+        DispatcherQueue.TryEnqueue(() => Navigate(current, true, true));
     }
 
     // ---------- Navigation ----------
-    void Navigate(string tag, bool force = false)
+    void Navigate(string tag, bool force = false, bool instant = false)
     {
         switch (tag)
         {
@@ -313,7 +315,8 @@ public sealed partial class ShellPage : Page
         };
         if (page == null) { tag = "home"; page = typeof(HomePage); }
         current = tag;
-        PageFrame.Navigate(page, null, new EntranceNavigationTransitionInfo());
+        PageFrame.Navigate(page, null, instant ? new SuppressNavigationTransitionInfo() : new EntranceNavigationTransitionInfo());
+        PageFrame.BackStack.Clear();
         DrawNav();
     }
 
@@ -386,7 +389,7 @@ public sealed partial class ShellPage : Page
             Content = "Someone used \"Log out of all devices\" on your account. Log in again to keep going.",
             CloseButtonText = "OK",
             XamlRoot = XamlRoot,
-        }.ShowAsync();
+        }.Themed().ShowAsync();
         App.Window?.ShowLogin();
     }
 }

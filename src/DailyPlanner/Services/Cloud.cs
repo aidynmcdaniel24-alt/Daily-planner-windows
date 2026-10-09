@@ -24,8 +24,8 @@ public static class Cloud
         return new Pulled(data, epoch);
     }
 
-    public static async Task Push(string uid, JsonObject st) =>
-        await Commit(Update("users/" + uid, new JsonObject { ["data"] = st.ToJsonString() }, "updated"));
+    public static async Task Push(string uid, string json) =>
+        await Commit(Update("users/" + uid, new JsonObject { ["data"] = json }, "updated"));
 
     // "Log out of all devices": every device that signed in before now gets signed out
     public static async Task KickAll(string uid) =>

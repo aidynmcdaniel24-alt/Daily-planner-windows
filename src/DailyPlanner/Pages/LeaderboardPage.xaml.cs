@@ -37,7 +37,7 @@ public sealed partial class LeaderboardPage : Page
                 var v = nameBox.Text.Trim(); if (v.Length == 0 || Board.Lb == null) return;
                 var bad = Board.NameProblem(v);
                 if (bad != null) { Show(bad); return; }
-                Board.Lb["name"] = v; Store.Save();
+                Board.Lb["name"] = v; Store.Save(false);
                 try { await Board.Update(); await DrawList(); } catch { }
             };
             nameTimer.Start();
@@ -116,7 +116,7 @@ public sealed partial class LeaderboardPage : Page
         var leave = UI.Btn("Leave the leaderboard", async () =>
         {
             var d = new ContentDialog { Title = "Leave the leaderboard?", Content = "Friends won't see your streaks anymore. You can join again later.", PrimaryButtonText = "Leave", CloseButtonText = "Cancel", XamlRoot = XamlRoot };
-            if (await d.ShowAsync() == ContentDialogResult.Primary) { await Board.Leave(); await Draw(); }
+            if (await d.Themed().ShowAsync() == ContentDialogResult.Primary) { await Board.Leave(); await Draw(); }
         });
         leave.Foreground = UI.Solid(0xE5, 0x48, 0x4D);
         body.Children.Add(leave);

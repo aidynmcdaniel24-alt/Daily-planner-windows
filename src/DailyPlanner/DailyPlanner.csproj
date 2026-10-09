@@ -18,6 +18,10 @@
     <WindowsAppSDKSelfContained>true</WindowsAppSDKSelfContained>
     <SelfContained>true</SelfContained>
     <Version>1.0.0</Version>
+    <!-- Faster start: compile ahead of time instead of when the app opens -->
+    <PublishReadyToRun>true</PublishReadyToRun>
+    <TieredPGO>true</TieredPGO>
+    <InvariantGlobalization>false</InvariantGlobalization>
     <Product>Daily Planner</Product>
     <Company>Daily Planner</Company>
   </PropertyGroup>

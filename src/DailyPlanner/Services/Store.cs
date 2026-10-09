@@ -45,26 +45,52 @@ public static class Store
         File.Move(tmp, StateFile, true);
     }
 
-    public static void Save()
+    // Saves the planner. Disk writes and redraws are batched so typing stays smooth.
+    // redraw: false is for text boxes (nothing else on screen needs to change while typing)
+    public static void Save(bool redraw = true)
     {
+        if (Ui != null && !Ui.HasThreadAccess) { Ui.TryEnqueue(() => Save(redraw)); return; }
         St["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        WriteFile();
+        dirty = true;
+        if (Ui == null) Flush(); else Later(ref writeTimer, 350, Flush);
         QueuePush();
-        Raise();
+        if (redraw) Raise();
         Saved?.Invoke();
+    }
+
+    static bool dirty;
+    static Microsoft.UI.Dispatching.DispatcherQueueTimer? writeTimer, pushTimer;
+
+    static void Later(ref Microsoft.UI.Dispatching.DispatcherQueueTimer? t, int ms, Action a)
+    {
+        if (t == null) { t = Ui!.CreateTimer(); t.IsRepeating = false; var act = a; t.Tick += (s, e) => act(); }
+        t.Stop(); t.Interval = TimeSpan.FromMilliseconds(ms); t.Start();
+    }
+
+    // Writes any unsaved changes to disk now (also called when the app closes)
+    public static void Flush()
+    {
+        if (!dirty) return;
+        dirty = false;
+        try { WriteFile(); } catch (Exception e) { App.Log("Save failed: " + e.Message); }
     }
 
     public static void Replace(JsonObject next)
     {
         St = next;
+        dirty = false;
         WriteFile();
         Raise();
     }
 
+    // Tells the open page to redraw, at most once per moment (many saves in a row = one redraw)
+    static bool raisePending;
     static void Raise()
     {
-        if (Ui != null && !Ui.HasThreadAccess) Ui.TryEnqueue(() => Changed?.Invoke());
-        else Changed?.Invoke();
+        if (Ui == null) { Changed?.Invoke(); return; }
+        if (raisePending) return;
+        raisePending = true;
+        Ui.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => { raisePending = false; Changed?.Invoke(); });
     }
 
     public static string Acct => St["acct"]?.ToString() ?? "";
@@ -189,19 +215,22 @@ public static class Store
     {
         var s = Auth.Current;
         if (s == null || Acct != s.Uid) return;
-        pushWait?.Cancel();
-        pushWait = new CancellationTokenSource();
-        var token = pushWait.Token;
+        if (Ui == null) return;
+        Later(ref pushTimer, 1500, PushNow);
+    }
+
+    // Copies the planner on the UI thread, then sends the copy (so nothing changes while it's being sent)
+    static void PushNow()
+    {
+        var s = Auth.Current;
+        if (s == null || Acct != s.Uid) return;
+        string json = St.ToJsonString();
+        SetSyncing(true);
         _ = Task.Run(async () =>
         {
-            try
-            {
-                await Task.Delay(1500, token);
-                SetSyncing(true);
-                await Cloud.Push(s.Uid, St);
-            }
+            try { await Cloud.Push(s.Uid, json); }
             catch { }
-            finally { if (!token.IsCancellationRequested) SetSyncing(false); }
+            finally { SetSyncing(false); }
         });
     }
 
@@ -235,8 +264,8 @@ public static class Store
         if (cloud != null && cloudTs == localTs) return "same";
         St["acct"] = s.Uid;
         if (localTs == 0) St["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        WriteFile();
-        await Cloud.Push(s.Uid, St);
+        Flush(); WriteFile();
+        await Cloud.Push(s.Uid, St.ToJsonString());
         return "up";
     }
 
@@ -250,6 +279,7 @@ public static class Store
     public static void ClearLocal()
     {
         St = new JsonObject();
+        dirty = false; writeTimer?.Stop(); pushTimer?.Stop();
         try { File.Delete(StateFile); } catch { }
         Raise();
     }

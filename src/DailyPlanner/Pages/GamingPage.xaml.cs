@@ -46,7 +46,7 @@ public sealed partial class GamingPage : Page
         var list = new ChecklistCard("gaming");
         list.Extra.Children.Add(focusLine);
         var goal = new TextBox { Header = "Focus goal for today", PlaceholderText = GameData.G(G, "ph"), Text = Store.Obj("fg")[Store.Td()]?.ToString() ?? "" };
-        goal.TextChanged += (s, e) => { Store.Obj("fg")[Store.Td()] = goal.Text; Store.Save(); };
+        goal.TextChanged += (s, e) => { Store.Obj("fg")[Store.Td()] = goal.Text; Store.Save(false); };
         list.Extra.Children.Add(goal);
         L.Main.Children.Add(list);
 
@@ -66,8 +66,8 @@ public sealed partial class GamingPage : Page
         // ---- Weekly review ----
         var r1 = new TextBox { Header = "What improved?", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 70, Text = Store.Str("r1") };
         var r2 = new TextBox { Header = "One fix for next week", AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 70, Text = Store.Str("r2") };
-        r1.TextChanged += (s, e) => { Store.St["r1"] = r1.Text; Store.Save(); };
-        r2.TextChanged += (s, e) => { Store.St["r2"] = r2.Text; Store.Save(); };
+        r1.TextChanged += (s, e) => { Store.St["r1"] = r1.Text; Store.Save(false); };
+        r2.TextChanged += (s, e) => { Store.St["r2"] = r2.Text; Store.Save(false); };
         L.Main.Children.Add(UI.Card("", "Weekly review", "Look back once a week. That's how you actually improve.", UI.Lane("gaming"), null, r1, r2));
 
         // ---- Break timer ----
@@ -88,7 +88,7 @@ public sealed partial class GamingPage : Page
         clear.Click += async (s, e) =>
         {
             var d = new ContentDialog { Title = "Clear all sessions?", Content = "This removes every calm and tilted session you've logged.", PrimaryButtonText = "Clear", CloseButtonText = "Cancel", XamlRoot = XamlRoot };
-            if (await d.ShowAsync() == ContentDialogResult.Primary) { Store.St["tl"] = new JsonArray(); Store.Save(); DrawTilt(); }
+            if (await d.Themed().ShowAsync() == ContentDialogResult.Primary) { Store.St["tl"] = new JsonArray(); Store.Save(); DrawTilt(); }
         };
         L.Side.Children.Add(UI.Card("", "Tilt tracker", "How did your last session feel?", UI.Lane("gaming"), null, UI.Two(calm, tilted, 8), dots, tiltText, UI.Row(4, undo, clear), tiltBar));
 

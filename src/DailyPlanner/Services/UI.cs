@@ -302,5 +302,18 @@ public static class UI
         return Surface(Stack(3, l, v, M(sub, 12)), 18);
     }
 
+    // Rounded purple square with the first letter of a name (used in the sidebar and settings)
+    public static Border Avatar(string name, double size)
+    {
+        var grad = new LinearGradientBrush { StartPoint = new Windows.Foundation.Point(0, 0), EndPoint = new Windows.Foundation.Point(1, 1) };
+        grad.GradientStops.Add(new GradientStop { Color = Color.FromArgb(255, 0x8B, 0x7D, 0xFF), Offset = 0 });
+        grad.GradientStops.Add(new GradientStop { Color = Color.FromArgb(255, 0x5B, 0x4A, 0xE6), Offset = 1 });
+        return new Border
+        {
+            Width = size, Height = size, CornerRadius = new CornerRadius(size * 0.32), Background = grad,
+            Child = new TextBlock { Text = name.Length > 0 ? name[..1].ToUpperInvariant() : "?", FontSize = size * 0.42, FontWeight = FontWeights.Bold, Foreground = new SolidColorBrush(Microsoft.UI.Colors.White), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center },
+        };
+    }
+
     public static string Plural(int n, string one, string many) => n + " " + (n == 1 ? one : many);
 }

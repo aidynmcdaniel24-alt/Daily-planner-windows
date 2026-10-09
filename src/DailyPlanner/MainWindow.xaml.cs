@@ -57,6 +57,7 @@ public sealed partial class MainWindow : Window
                 foreach (var kv in from) copy[kv.Key] = kv.Value;
                 rd.ThemeDictionaries[t] = copy;
             }
+            Theme.Colors = rd;
             RootGrid.Resources.MergedDictionaries.Add(rd);
         }
         catch (Exception ex) { App.Log("Colors: " + ex.Message); }

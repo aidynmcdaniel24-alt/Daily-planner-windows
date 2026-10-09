@@ -128,8 +128,12 @@ public sealed partial class HomePage : Page
     }
     protected override void OnNavigatedFrom(NavigationEventArgs e) => Store.Changed -= Draw;
 
+    static DateTime lastExtras = DateTime.MinValue;
     async Task Extras()
     {
+        // these need the internet, so only check every few minutes (not every time Home opens)
+        if ((DateTime.Now - lastExtras).TotalMinutes < 5) { DrawQuote(); return; }
+        lastExtras = DateTime.Now;
         if (Auth.Current != null)
         {
             await Auth.RefreshProfile();
@@ -166,7 +170,7 @@ public sealed partial class HomePage : Page
         {
             Title = "What's new", PrimaryButtonText = "Got it", DefaultButton = ContentDialogButton.Primary, XamlRoot = XamlRoot,
             Content = new ScrollViewer { Content = UI.Stack(10, UI.M("Version " + ContentData.NewsVersion), list), MaxHeight = 420 },
-        }.ShowAsync();
+        }.Themed().ShowAsync();
     }
 
     void Draw()

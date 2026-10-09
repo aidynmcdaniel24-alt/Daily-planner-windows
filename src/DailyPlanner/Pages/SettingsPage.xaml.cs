@@ -13,7 +13,7 @@ namespace DailyPlanner.Pages;
 // ===== Settings: account, game, look, reminders, data =====
 public sealed partial class SettingsPage : Page
 {
-    readonly StackPanel root = new() { Spacing = 16, MaxWidth = 780, Padding = new Thickness(36, 28, 36, 36) };
+    readonly StackPanel root = new() { Spacing = 16, MaxWidth = 820, HorizontalAlignment = HorizontalAlignment.Stretch, Padding = new Thickness(36, 28, 36, 36) };
     readonly TextBlock syncInfo = UI.M("", 12);
     readonly StackPanel logins = new();
     readonly TextBlock aiStatus = UI.M("", 12);
@@ -24,9 +24,15 @@ public sealed partial class SettingsPage : Page
         InitializeComponent();
         Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         root.ChildrenTransitions = new Microsoft.UI.Xaml.Media.Animation.TransitionCollection { new Microsoft.UI.Xaml.Media.Animation.EntranceThemeTransition { IsStaggeringEnabled = true } };
+        SizeChanged += (s, e) => root.Padding = e.NewSize.Width < 600 ? new Thickness(14, 16, 14, 24) : e.NewSize.Width < 860 ? new Thickness(22, 22, 22, 30) : new Thickness(36, 28, 36, 36);
     }
 
-    protected override void OnNavigatedTo(NavigationEventArgs e) { Build(); loading = false; }
+    protected override void OnNavigatedTo(NavigationEventArgs e)
+    {
+        Build();
+        // some controls report their starting value a moment later; ignore that
+        DispatcherQueue.TryEnqueue(Microsoft.UI.Dispatching.DispatcherQueuePriority.Low, () => loading = false);
+    }
 
     static string Website(string path) => Config.Website + path;
     static void Open(string url) => Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
@@ -50,7 +56,7 @@ public sealed partial class SettingsPage : Page
         string name = s == null ? (Store.Name.Length > 0 ? Store.Name : "Guest") : (s.Name.Length > 0 ? s.Name : Store.Name.Length > 0 ? Store.Name : s.Email.Split('@')[0]);
         var who = new Grid { ColumnSpacing = 14 };
         who.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); who.ColumnDefinitions.Add(new ColumnDefinition());
-        who.Children.Add(new PersonPicture { DisplayName = name, Width = 48, Height = 48 });
+        who.Children.Add(UI.Avatar(name, 48));
         var info = UI.Stack(1, UI.T(name, 15, true), UI.M(s == null ? "Not signed in. Your data only saves on this computer." : "Signed in as " + s.Email)); info.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(info, 1); who.Children.Add(info);
 
@@ -98,7 +104,7 @@ public sealed partial class SettingsPage : Page
     async Task<bool> Confirm(string title, string text, string ok, bool danger = false)
     {
         var d = new ContentDialog { Title = title, Content = text, PrimaryButtonText = ok, CloseButtonText = "Cancel", DefaultButton = danger ? ContentDialogButton.Close : ContentDialogButton.Primary, XamlRoot = XamlRoot };
-        return await d.ShowAsync() == ContentDialogResult.Primary;
+        return await d.Themed().ShowAsync() == ContentDialogResult.Primary;
     }
 
     async void LogOut()
@@ -119,7 +125,7 @@ public sealed partial class SettingsPage : Page
     {
         if (!Auth.RecentLogin)
         {
-            await new ContentDialog { Title = "Please log in again first", Content = "For safety, log out and log back in, then delete your account within 5 minutes.", CloseButtonText = "OK", XamlRoot = XamlRoot }.ShowAsync();
+            await new ContentDialog { Title = "Please log in again first", Content = "For safety, log out and log back in, then delete your account within 5 minutes.", CloseButtonText = "OK", XamlRoot = XamlRoot }.Themed().ShowAsync();
             return;
         }
         var box = new TextBox { PlaceholderText = "Type DELETE" };
@@ -129,7 +135,7 @@ public sealed partial class SettingsPage : Page
             Content = UI.Stack(12, UI.T("This deletes your account and all your saved data forever. It can't be undone. Type DELETE to confirm."), box),
         };
         box.TextChanged += (s, e) => d.IsPrimaryButtonEnabled = box.Text.Trim() == "DELETE";
-        if (await d.ShowAsync() != ContentDialogResult.Primary) return;
+        if (await d.Themed().ShowAsync() != ContentDialogResult.Primary) return;
         var uid = Auth.Current!.Uid;
         try
         {
@@ -164,7 +170,7 @@ public sealed partial class SettingsPage : Page
             if (loading) return;
             var v = game.Text.Trim(); var d = GameData.Detect(v);
             Store.St["gn"] = v; Store.St["gm"] = d.K.Length > 0 ? d.K : "Another game"; Store.St.Remove("gg");
-            Store.Save(); SelectType(); Status();
+            Store.Save(false); SelectType(); Status();
         };
         type.SelectionChanged += (s, e) =>
         {
@@ -192,9 +198,11 @@ public sealed partial class SettingsPage : Page
             Grid.SetColumn(b, i); days.Children.Add(b);
         }
         // Short day letters when the window is narrow
+        bool? wasTiny = null;
         days.SizeChanged += (s, e) =>
         {
             bool tiny = e.NewSize.Width < 420;
+            if (tiny == wasTiny) return; wasTiny = tiny;
             for (int i = 0; i < 7; i++) if (days.Children[i] is ToggleButton tb) tb.Content = tiny ? names[i][..1] : names[i];
         };
         return UI.Card("", "Game and schedule", "What you play and which days you have more time.", UI.Lane("gaming"), null,
@@ -208,7 +216,12 @@ public sealed partial class SettingsPage : Page
         var theme = new RadioButtons { Header = "Look", MaxColumns = 3 };
         foreach (var t in new[] { "Match Windows", "Light", "Dark" }) theme.Items.Add(t);
         theme.SelectedIndex = Theme.Mode switch { "light" => 1, "dark" => 2, _ => 0 };
-        theme.SelectionChanged += (s, e) => { if (!loading) Theme.Set(theme.SelectedIndex switch { 1 => "light", 2 => "dark", _ => "auto" }); };
+        theme.SelectionChanged += (s, e) =>
+        {
+            if (loading || theme.SelectedIndex < 0) return;
+            var m = theme.SelectedIndex switch { 1 => "light", 2 => "dark", _ => "auto" };
+            if (m != Theme.Mode) Theme.Set(m);
+        };
         var sound = new ToggleSwitch { Header = "Sound when you finish a checklist", IsOn = Store.St["snd"]?.ToString() != "false" };
         sound.Toggled += (s, e) => { if (loading) return; Store.St["snd"] = sound.IsOn; Store.Save(); if (sound.IsOn) Sound.Chime(); };
         var startup = new ToggleSwitch { Header = "Open Daily Planner when Windows starts", IsOn = Startup.On };
@@ -300,7 +313,7 @@ public sealed partial class SettingsPage : Page
         var type = new RadioButtons { MaxColumns = 3 }; foreach (var t in new[] { "Bug", "Idea", "Other" }) type.Items.Add(t); type.SelectedIndex = 0;
         var box = new TextBox { AcceptsReturn = true, TextWrapping = TextWrapping.Wrap, MinHeight = 110, MaxLength = 2000, PlaceholderText = "What happened, or what would make the app better?" };
         var d = new ContentDialog { Title = "Send feedback", PrimaryButtonText = "Send", CloseButtonText = "Cancel", DefaultButton = ContentDialogButton.Primary, XamlRoot = XamlRoot, Content = UI.Stack(12, type, box) };
-        if (await d.ShowAsync() != ContentDialogResult.Primary || box.Text.Trim().Length == 0) return;
+        if (await d.Themed().ShowAsync() != ContentDialogResult.Primary || box.Text.Trim().Length == 0) return;
         try
         {
             await Cloud.Commit(Cloud.Update("feedback/" + Guid.NewGuid().ToString("N")[..20], new JsonObject

@@ -25,11 +25,17 @@ public partial class App : Application
         var started = DateTime.Now;
         AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
         {
-            if ((DateTime.Now - started).TotalSeconds < 60 && e.Exception is not (OperationCanceledException or HttpRequestException))
+            if ((DateTime.Now - started).TotalSeconds < 20 && e.Exception is not (OperationCanceledException or HttpRequestException))
                 Log("First-chance: " + e.Exception.GetType().Name + ": " + e.Exception.Message + " @ " + e.Exception.StackTrace?.Split('\n').FirstOrDefault()?.Trim());
         };
         try { InitializeComponent(); }
         catch (Exception ex) { Log("App.xaml failed: " + ex); throw; }
+        try { var log = Path.Combine(Store.Folder, "errors.log"); if (File.Exists(log) && new FileInfo(log).Length > 200_000) File.Delete(log); } catch { }
+        // Load the planner now so menus and pop-ups open in the right theme (light or dark)
+        Store.Load();
+        Theme.System = RequestedTheme;
+        if (Theme.Mode == "dark") RequestedTheme = ApplicationTheme.Dark;
+        else if (Theme.Mode == "light") RequestedTheme = ApplicationTheme.Light;
         UnhandledException += (s, e) =>
         {
             // Keep the app open on unexpected errors and write them down
@@ -42,10 +48,9 @@ public partial class App : Application
     {
         try
         {
-            Store.Load();
             Notify.Start();
             Window = new MainWindow();
-            Window.Closed += (s, e) => { FocusTimer.Finish(); Notify.Stop(); };
+            Window.Closed += (s, e) => { FocusTimer.Finish(); Store.Flush(); Notify.Stop(); };
             Store.Ui = Window.DispatcherQueue;
             Window.Activate();
             Window.Start();
