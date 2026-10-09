@@ -93,7 +93,11 @@ jobs:
           $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
           $bmp.Save("smoke\home.png")
           if (Test-Path $log) { Copy-Item $log smoke\errors.log -Force; $t = (Get-Content $log -Raw) -replace "`r",'' -replace "`n",'%0A'; Write-Host "::warning title=errors.log after home::$t" }
-          if ($p.HasExited) { Write-Host "::error::Home screen closed by itself (exit code $($p.ExitCode))"; exit 1 }
+          if ($p.HasExited) {
+            $ev = Get-WinEvent -LogName Application -MaxEvents 30 | Where-Object { $_.LevelDisplayName -eq 'Error' -and $_.ProviderName -ne 'Microsoft-Windows-Security-SPP' } | Select-Object -First 3
+            foreach ($e in $ev) { $m = ($e.ProviderName + ': ' + $e.Message) -replace "`r",'' -replace "`n",'%0A'; if ($m.Length -gt 3000) { $m = $m.Substring(0,3000) }; Write-Host "::error title=Windows event (home)::$m" }
+            Write-Host "::error::Home screen closed by itself (exit code $($p.ExitCode))"; exit 1
+          }
           Stop-Process -Id $p.Id
 
       - uses: actions/upload-artifact@v4

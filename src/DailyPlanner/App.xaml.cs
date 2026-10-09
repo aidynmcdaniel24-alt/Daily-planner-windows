@@ -21,6 +21,13 @@ public partial class App : Application
     public App()
     {
         AppDomain.CurrentDomain.UnhandledException += (s, e) => Log("Crash: " + e.ExceptionObject);
+        // Writes down every error, even ones that get handled (only in the first minute, to find startup problems)
+        var started = DateTime.Now;
+        AppDomain.CurrentDomain.FirstChanceException += (s, e) =>
+        {
+            if ((DateTime.Now - started).TotalSeconds < 60 && e.Exception is not (OperationCanceledException or HttpRequestException))
+                Log("First-chance: " + e.Exception.GetType().Name + ": " + e.Exception.Message + " @ " + e.Exception.StackTrace?.Split('\n').FirstOrDefault()?.Trim());
+        };
         try { InitializeComponent(); }
         catch (Exception ex) { Log("App.xaml failed: " + ex); throw; }
         UnhandledException += (s, e) =>
