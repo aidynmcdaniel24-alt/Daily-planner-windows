@@ -35,26 +35,45 @@ jobs:
       - name: Check the app opens (smoke test)
         shell: pwsh
         run: |
+          New-Item -ItemType Directory -Force smoke | Out-Null
           $p = Start-Process -FilePath publish\DailyPlanner.exe -PassThru
-          Start-Sleep -Seconds 20
+          Start-Sleep -Seconds 25
           Add-Type -AssemblyName System.Windows.Forms, System.Drawing
           $b = [System.Windows.Forms.Screen]::PrimaryScreen.Bounds
           $bmp = New-Object System.Drawing.Bitmap $b.Width, $b.Height
           $g = [System.Drawing.Graphics]::FromImage($bmp)
           $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
-          New-Item -ItemType Directory -Force smoke | Out-Null
           $bmp.Save("smoke\screen.png")
           $log = "$env:LOCALAPPDATA\DailyPlanner\errors.log"
-          if (Test-Path $log) { Copy-Item $log smoke\errors.log; Get-Content $log }
-          if ($p.HasExited) { Write-Host "App closed by itself (exit code $($p.ExitCode))"; Get-WinEvent -LogName Application -MaxEvents 15 | Where-Object { $_.LevelDisplayName -eq 'Error' } | Format-List TimeCreated, ProviderName, Message | Out-File smoke\events.txt; Get-Content smoke\events.txt; exit 1 }
+          if (Test-Path $log) {
+            Copy-Item $log smoke\errors.log
+            $t = (Get-Content $log -Raw) -replace "`r",'' -replace "`n",'%0A'
+            Write-Host "::error title=errors.log::$t"
+          }
+          if ($p.HasExited) {
+            $ev = Get-WinEvent -LogName Application -MaxEvents 30 | Where-Object { $_.LevelDisplayName -eq 'Error' } | Select-Object -First 4
+            $ev | Format-List TimeCreated, ProviderName, Message | Out-File smoke\events.txt
+            foreach ($e in $ev) { $m = ($e.ProviderName + ': ' + $e.Message) -replace "`r",'' -replace "`n",'%0A'; if ($m.Length -gt 3000) { $m = $m.Substring(0,3000) }; Write-Host "::error title=Windows event::$m" }
+            Write-Host "::error::App closed by itself (exit code $($p.ExitCode))"
+            exit 1
+          }
           Write-Host "App is running"
           Stop-Process -Id $p.Id
 
-      - uses: actions/upload-artifact@v4
+      - name: Save the smoke test screenshot to the smoke-results branch
         if: always()
-        with:
-          name: smoke-test
-          path: smoke/*
+        shell: pwsh
+        run: |
+          if (-not (Test-Path smoke)) { exit 0 }
+          git config user.name "build-bot"; git config user.email "build-bot@users.noreply.github.com"
+          $dir = "$env:RUNNER_TEMP\sr"; New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item smoke\* $dir
+          git checkout --orphan smoke-results
+          git rm -rf --cached . | Out-Null
+          Get-ChildItem -Force | Where-Object { $_.Name -ne '.git' } | Remove-Item -Recurse -Force
+          Copy-Item "$dir\*" .
+          git add -A; git commit -m "Smoke test results for run ${{ github.run_number }}" | Out-Null
+          git push -f origin smoke-results
 
       - uses: actions/upload-artifact@v4
         with:
