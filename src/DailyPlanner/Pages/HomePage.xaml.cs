@@ -16,6 +16,10 @@ public sealed partial class HomePage : Page
     public HomePage()
     {
         InitializeComponent();
+        SetupBar.Closed += (s, e) => { SetupBar.Tag = "seen"; SetupBar.Visibility = Visibility.Collapsed; };
+        VerifyBar.Closed += (s, e) => VerifyBar.Visibility = Visibility.Collapsed;
+        SetupBar.Visibility = Visibility.Collapsed;
+        VerifyBar.Visibility = Visibility.Collapsed;
         SizeChanged += (s, e) => Layout(e.NewSize.Width);
     }
 
@@ -57,6 +61,7 @@ public sealed partial class HomePage : Page
                 Child = new TextBlock { Text = g, FontSize = 12, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold },
             });
         SetupBar.IsOpen = !Store.SetUp && SetupBar.Tag == null;
+        SetupBar.Visibility = SetupBar.IsOpen ? Visibility.Visible : Visibility.Collapsed;
 
         // Rings and lanes
         int all = 0, done = 0;
@@ -148,6 +153,7 @@ public sealed partial class HomePage : Page
         if (Auth.Current == null) return;
         await Auth.RefreshProfile();
         VerifyBar.IsOpen = Auth.Current is { UsesPassword: true, Verified: false };
+        VerifyBar.Visibility = VerifyBar.IsOpen ? Visibility.Visible : Visibility.Collapsed;
     }
 
     async void Resend_Click(object sender, RoutedEventArgs e)
