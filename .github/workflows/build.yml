@@ -78,21 +78,6 @@ jobs:
           if ($p.HasExited) { Write-Host "::error::Home screen closed by itself (exit code $($p.ExitCode))"; exit 1 }
           Stop-Process -Id $p.Id
 
-      - name: Save the smoke test screenshot to the smoke-results branch
-        if: always()
-        shell: pwsh
-        run: |
-          if (-not (Test-Path smoke)) { exit 0 }
-          git config user.name "build-bot"; git config user.email "build-bot@users.noreply.github.com"
-          $dir = "$env:RUNNER_TEMP\sr"; New-Item -ItemType Directory -Force $dir | Out-Null
-          Copy-Item smoke\* $dir
-          git checkout --orphan smoke-results
-          git rm -rf --cached . | Out-Null
-          Get-ChildItem -Force | Where-Object { $_.Name -ne '.git' } | Remove-Item -Recurse -Force
-          Copy-Item "$dir\*" .
-          git add -A; git commit -m "Smoke test results for run ${{ github.run_number }}" | Out-Null
-          git push -f origin smoke-results
-
       - uses: actions/upload-artifact@v4
         with:
           name: DailyPlanner-windows
@@ -110,3 +95,19 @@ jobs:
           files: |
             out/DailyPlannerSetup.exe
             out/DailyPlanner-portable.zip
+
+      - name: Save the smoke test screenshot to the smoke-results branch
+        if: always()
+        shell: pwsh
+        run: |
+          # Runs last because it swaps the folder to a separate branch
+          if (-not (Test-Path smoke)) { exit 0 }
+          git config user.name "build-bot"; git config user.email "build-bot@users.noreply.github.com"
+          $dir = "$env:RUNNER_TEMP\sr"; New-Item -ItemType Directory -Force $dir | Out-Null
+          Copy-Item smoke\* $dir
+          git checkout --orphan smoke-results
+          git rm -rf --cached . | Out-Null
+          Get-ChildItem -Force | Where-Object { $_.Name -ne '.git' } | Remove-Item -Recurse -Force
+          Copy-Item "$dir\*" .
+          git add -A; git commit -m "Smoke test results for run ${{ github.run_number }}" | Out-Null
+          git push -f origin smoke-results
