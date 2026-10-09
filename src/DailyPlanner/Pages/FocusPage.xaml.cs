@@ -13,6 +13,6 @@ public sealed partial class FocusPage : Page
         var s = new StackPanel { Spacing = 16, MaxWidth = 680, Padding = new Thickness(24, 28, 24, 100) };
         s.Children.Add(UI.PageTitle("Focus mode", "Just today's checklists", "Press Esc or the button below to leave."));
         foreach (var lane in Store.Lanes) s.Children.Add(new ChecklistCard(lane));
-        Content = new ScrollViewer { Content = s, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        Content = UI.Scroller(s);
     }
 }

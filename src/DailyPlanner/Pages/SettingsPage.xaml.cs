@@ -22,7 +22,7 @@ public sealed partial class SettingsPage : Page
     public SettingsPage()
     {
         InitializeComponent();
-        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        Content = UI.Scroller(root);
         root.ChildrenTransitions = new Microsoft.UI.Xaml.Media.Animation.TransitionCollection { new Microsoft.UI.Xaml.Media.Animation.EntranceThemeTransition { IsStaggeringEnabled = true } };
         SizeChanged += (s, e) => root.Padding = e.NewSize.Width < 600 ? new Thickness(14, 16, 14, 24) : e.NewSize.Width < 860 ? new Thickness(22, 22, 22, 30) : new Thickness(36, 28, 36, 36);
     }

@@ -93,6 +93,53 @@ public static class UI
         return Surface(inner);
     }
 
+    // ---------- Scrolling ----------
+    // True while a page is moving; hover effects pause so they don't flicker under the mouse
+    public static bool Scrolling { get; private set; }
+
+    // The page scroller used everywhere: smooth, and it doesn't jump when you click something
+    public static ScrollViewer Scroller(UIElement content)
+    {
+        var sv = new ScrollViewer { Content = content, VerticalScrollBarVisibility = ScrollBarVisibility.Auto, HorizontalScrollMode = ScrollMode.Disabled, HorizontalScrollBarVisibility = ScrollBarVisibility.Disabled };
+        sv.ViewChanging += (s, e) => Scrolling = true;
+        sv.ViewChanged += (s, e) => { if (!e.IsIntermediate) Scrolling = false; };
+        // Clicking a checkbox or button gives it focus, and the scroller then "helpfully" jumps to show it.
+        // Only do that for the keyboard (Tab key), not for mouse clicks.
+        if (content is FrameworkElement fe)
+            fe.BringIntoViewRequested += (s, e) => { if (e.TargetElement is Control c && c.FocusState == FocusState.Pointer) e.Handled = true; };
+        return sv;
+    }
+
+    // Lays out chips/pills left to right and wraps onto the next line when out of room (no sideways scrolling)
+    public sealed class WrapPanel : Panel
+    {
+        public double Gap { get; set; } = 6;
+        protected override Windows.Foundation.Size MeasureOverride(Windows.Foundation.Size avail)
+        {
+            double x = 0, y = 0, row = 0, w = 0;
+            foreach (var c in Children)
+            {
+                c.Measure(new Windows.Foundation.Size(avail.Width, double.PositiveInfinity));
+                var d = c.DesiredSize;
+                if (x > 0 && x + d.Width > avail.Width) { y += row + Gap; x = 0; row = 0; }
+                x += d.Width + Gap; row = Math.Max(row, d.Height); w = Math.Max(w, x - Gap);
+            }
+            return new Windows.Foundation.Size(double.IsInfinity(avail.Width) ? w : Math.Min(w, avail.Width), y + row);
+        }
+        protected override Windows.Foundation.Size ArrangeOverride(Windows.Foundation.Size size)
+        {
+            double x = 0, y = 0, row = 0;
+            foreach (var c in Children)
+            {
+                var d = c.DesiredSize;
+                if (x > 0 && x + d.Width > size.Width) { y += row + Gap; x = 0; row = 0; }
+                c.Arrange(new Windows.Foundation.Rect(x, y, d.Width, d.Height));
+                x += d.Width + Gap; row = Math.Max(row, d.Height);
+            }
+            return size;
+        }
+    }
+
     // The card box itself: rounded, thin border that brightens a little on hover
     public static Border Surface(UIElement child, double padding = 22)
     {
@@ -101,7 +148,7 @@ public static class UI
             Background = Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = Res("CardStrokeColorDefaultBrush"),
             BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Padding = new Thickness(padding), Child = child,
         };
-        card.PointerEntered += (s, e) => card.BorderBrush = Res("Line2Brush");
+        card.PointerEntered += (s, e) => { if (!Scrolling) card.BorderBrush = Res("Line2Brush"); };
         card.PointerExited += (s, e) =>
         {
             var p = e.GetCurrentPoint(card).Position;
@@ -247,7 +294,7 @@ public static class UI
             all.Children.Add(Top); all.Children.Add(cols);
             Main.ChildrenTransitions = new TransitionCollection { new EntranceThemeTransition { IsStaggeringEnabled = true } };
             Side.ChildrenTransitions = new TransitionCollection { new EntranceThemeTransition { IsStaggeringEnabled = true } };
-            Root = new ScrollViewer { Content = all, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            Root = Scroller(all);
             Root.SizeChanged += (s, e) => Fit(e.NewSize.Width);
             Fit(1200);
         }

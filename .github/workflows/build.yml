@@ -129,7 +129,10 @@ jobs:
               # hover over "Gaming" in the sidebar and grab a few frames to catch any flashing
               [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(100, 217)
               foreach ($i in 0..5) { Start-Sleep -Milliseconds 30; $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size); $bmp.Save("smoke\hover$i.png") }
-              [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(600, 700)
+              [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(600, 400)
+              # scroll down with the mouse wheel and grab frames while it moves
+              Add-Type -Namespace W -Name M -MemberDefinition '[DllImport("user32.dll")] public static extern void mouse_event(int f, int x, int y, int d, int e);'
+              foreach ($i in 0..5) { [W.M]::mouse_event(0x0800, 0, 0, -120, 0); Start-Sleep -Milliseconds 60; $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size); $bmp.Save("smoke\scroll$i.png") }
             }
             if ($p.HasExited) { Write-Host "::error::The $pg page (dark) closed by itself"; exit 1 }
             Stop-Process -Id $p.Id; Start-Sleep -Seconds 2

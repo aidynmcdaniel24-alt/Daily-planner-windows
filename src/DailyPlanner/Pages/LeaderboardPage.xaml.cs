@@ -25,7 +25,7 @@ public sealed partial class LeaderboardPage : Page
         InitializeComponent();
         root.Children.Add(UI.PageTitle("Leaderboard", "Compete with friends", "Compare streaks, send a nudge, keep each other going."));
         root.Children.Add(body);
-        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        Content = UI.Scroller(root);
         // Saves your name a moment after you stop typing (one timer, reused)
         var nameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
         nameTimer.Tick += async (a, b) =>

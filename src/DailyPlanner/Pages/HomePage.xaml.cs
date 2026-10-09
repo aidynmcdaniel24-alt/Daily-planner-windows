@@ -15,7 +15,7 @@ public sealed partial class HomePage : Page
 {
     readonly StackPanel root = new() { Spacing = 18, MaxWidth = 1180 };
     readonly TextBlock date = UI.Eyebrow(""), hello = UI.T("", 38, true), sub = UI.M("", 15);
-    readonly StackPanel goals = new() { Orientation = Orientation.Horizontal, Spacing = 6 };
+    readonly UI.WrapPanel goals = new() { Gap = 6 };
     readonly InfoBar setupBar = Bar("Make the plan yours", "Answer a few setup questions to get drills for your game and your own bedtime routine.", InfoBarSeverity.Informational);
     readonly InfoBar verifyBar = Bar("Please verify your email", "Check your inbox for the link.", InfoBarSeverity.Warning);
     readonly InfoBar nudgeBar = Bar("", "", InfoBarSeverity.Success);
@@ -29,7 +29,8 @@ public sealed partial class HomePage : Page
     readonly TextBlock allPct = new() { FontSize = 28, FontWeight = FontWeights.Bold, CharacterSpacing = -20, HorizontalAlignment = HorizontalAlignment.Center };
     readonly StackPanel lanes = new() { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
     readonly TextBlock quote = UI.T("", 18), quoteBy = UI.M("");
-    readonly StackPanel typeRow = new() { Orientation = Orientation.Horizontal, Spacing = 4 }, moodRow = new() { Orientation = Orientation.Horizontal, Spacing = 6 };
+    readonly StackPanel typeRow = new() { Orientation = Orientation.Horizontal, Spacing = 4 };
+    readonly UI.WrapPanel moodRow = new() { Gap = 6 };
     (string lane, int index)? next;
     int shift;
     static bool newsShown;
@@ -100,14 +101,17 @@ public sealed partial class HomePage : Page
         }
         var refresh = UI.IconBtn("", "New quote", () => { shift++; DrawQuote(); });
         var qhead = new Grid(); qhead.Children.Add(typeRow); refresh.HorizontalAlignment = HorizontalAlignment.Right; qhead.Children.Add(refresh);
-        var moodLine = UI.Row(10, UI.M("Mood"), moodRow); ((TextBlock)moodLine.Children[0]).VerticalAlignment = VerticalAlignment.Center;
+        var moodLabel = UI.M("Mood"); moodLabel.VerticalAlignment = VerticalAlignment.Center;
+        var moodLine = new Grid { ColumnSpacing = 10 };
+        moodLine.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); moodLine.ColumnDefinitions.Add(new ColumnDefinition());
+        moodLine.Children.Add(moodLabel); Grid.SetColumn(moodRow, 1); moodLine.Children.Add(moodRow);
         root.Children.Add(new Border
         {
             Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Padding = new Thickness(20),
-            Child = UI.Stack(10, qhead, quote, quoteBy, new ScrollViewer { Content = moodLine, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Auto, VerticalScrollMode = ScrollMode.Disabled }),
+            Child = UI.Stack(10, qhead, quote, quoteBy, moodLine),
         });
 
-        Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+        Content = UI.Scroller(root);
         SizeChanged += (s, e) => Fit(e.NewSize.Width);
     }
 
