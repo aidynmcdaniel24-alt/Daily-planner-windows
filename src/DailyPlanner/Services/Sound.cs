@@ -8,13 +8,14 @@ namespace DailyPlanner.Services;
 public static class Sound
 {
     static MediaPlayer? player;
+    static byte[]? chime;   // made once, reused
 
     public static async void Chime()
     {
         if (Store.St["snd"]?.ToString() == "false") return;
         try
         {
-            byte[] wav = Make(new[] { (659.25, 0.0), (880.0, 0.12) }, 0.55);
+            byte[] wav = chime ??= Make(new[] { (659.25, 0.0), (880.0, 0.12) }, 0.55);
             var stream = new InMemoryRandomAccessStream();
             using (var w = new DataWriter(stream)) { w.WriteBytes(wav); await w.StoreAsync(); await w.FlushAsync(); w.DetachStream(); }
             stream.Seek(0);

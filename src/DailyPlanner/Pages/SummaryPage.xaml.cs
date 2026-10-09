@@ -22,7 +22,7 @@ public sealed partial class SummaryPage : Page
     readonly StackPanel badges = new() { Spacing = 6 };
     readonly StackPanel week = new() { Spacing = 0 };
     int monthOffset;
-    DispatcherTimer? noteTimer;
+    DispatcherTimer noteTimer = null!;
 
     public SummaryPage()
     {
@@ -36,19 +36,17 @@ public sealed partial class SummaryPage : Page
         var next = UI.IconBtn("", "Next month", () => { if (monthOffset < 0) { monthOffset++; DrawCalendar(); } });
         L.Main.Children.Add(UI.Card("", "Calendar", "A dot for each checklist you finished.", null, UI.Row(4, prev, next), monthTitle, cal,
             UI.Row(14, Legend("gaming", "Gaming"), Legend("sleep", "Sleep"), Legend("coding", "Coding"))));
-        note.TextChanged += (s, e) =>
+        // Saves the note a moment after you stop typing (one timer, reused)
+        noteTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
+        noteTimer.Tick += (a, b) =>
         {
-            noteTimer?.Stop();
-            noteTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(600) };
-            noteTimer.Tick += (a, b) =>
-            {
-                noteTimer?.Stop();
-                var nt = Store.Obj("nt");
-                if (note.Text.Trim().Length == 0) nt.Remove(Store.Td()); else nt[Store.Td()] = note.Text;
-                Store.Save();
-            };
-            noteTimer.Start();
+            noteTimer.Stop();
+            var nt = Store.Obj("nt");
+            if (note.Text.Trim().Length == 0) nt.Remove(Store.Td()); else nt[Store.Td()] = note.Text;
+            Store.Save(false);
+            DrawNotes();
         };
+        note.TextChanged += (s, e) => { if (settingNote) return; noteTimer.Stop(); noteTimer.Start(); };
         L.Main.Children.Add(UI.Card("", "Today's note", "What went well? What will you change?", null, null, note, past));
 
         L.Side.Children.Add(UI.Card("", "Weekly challenges", null, null, null, chSub, challenges));
@@ -61,15 +59,22 @@ public sealed partial class SummaryPage : Page
 
     protected override void OnNavigatedTo(NavigationEventArgs e)
     {
+        settingNote = true;
         note.Text = (Store.St["nt"] as JsonObject)?[Store.Td()]?.ToString() ?? "";
+        settingNote = false;
         Draw();
         Store.Changed += Draw;
     }
-    protected override void OnNavigatedFrom(NavigationEventArgs e) => Store.Changed -= Draw;
+    protected override void OnNavigatedFrom(NavigationEventArgs e) { Store.Changed -= Draw; if (noteTimer.IsEnabled) { noteTimer.Stop(); var nt = Store.Obj("nt"); if (note.Text.Trim().Length == 0) nt.Remove(Store.Td()); else nt[Store.Td()] = note.Text; Store.Save(false); } }
+    bool settingNote;
+    string calSig = "";
 
     void Draw()
     {
-        DrawTiles(); DrawCharts(); DrawCalendar(); DrawNotes(); DrawChallenges(); DrawBadges(); DrawWeek();
+        DrawTiles(); DrawCharts(); DrawNotes(); DrawChallenges(); DrawBadges(); DrawWeek();
+        // the calendar is the biggest part, so only rebuild it when the finished days changed
+        string cs = monthOffset + "|" + Store.Td() + "|" + ((Store.St["ok"] as JsonObject)?.Count ?? 0) + "|" + Store.Str("ok").GetHashCode();
+        if (cs != calSig) { calSig = cs; DrawCalendar(); }
     }
 
     void DrawTiles()

@@ -39,6 +39,7 @@ public sealed partial class CodingPage : Page
 
         // ---- Today's coding drill ----
         var exp = new Expander { Header = "All coding drills", HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch, Content = allDrills };
+        drillsExp = exp; exp.Expanding += (s, e) => BuildAllDrills();
         L.Main.Children.Add(UI.Card("\uE7C1", "Today's coding drill", "A small skill to practice today.", UI.Lane("coding"), null, drillBox,
             UI.Two(UI.Btn("I did this", DidDrill, true), UI.Btn("Another drill", () => Bump("cdo")), 8), exp));
 
@@ -116,7 +117,15 @@ public sealed partial class CodingPage : Page
         var today = list[(DayNum + Offset("cdo")) % list.Count];
         drillName = today.Name;
         drillBox.Children.Add(GamingPage.DrillView(today, "coding"));
-        foreach (var d in list.Where(d => d != today)) allDrills.Children.Add(GamingPage.DrillView(d, "coding"));
+        otherDrills = list.Where(d => d != today).ToList();
+        if (drillsExp?.IsExpanded == true) BuildAllDrills();
+    }
+
+    List<Drill> otherDrills = new(); Expander? drillsExp;
+    void BuildAllDrills()
+    {
+        if (allDrills.Children.Count > 0) return;
+        foreach (var d in otherDrills) allDrills.Children.Add(GamingPage.DrillView(d, "coding"));
     }
 
     void DidDrill()
@@ -197,7 +206,23 @@ public sealed partial class CodingPage : Page
         Store.Save();
     }
 
+    // Each part only redraws when its own data changed
+    string logSig = "", tileSig = "", drillSig = "", chartSig = "";
     void Draw()
+    {
+        var tcArr = Store.Arr("tc");
+        string ls = tcArr.Count + "|" + (tcArr.LastOrDefault()?.ToJsonString() ?? "");
+        if (ls != logSig) { logSig = ls; DrawLog(); }
+        DrawIdea(); DrawTip();
+        string ts = ls + "|" + (Store.St["cm"]?.ToJsonString() ?? "") + "|" + Store.Streak("coding") + "|" + Store.Td();
+        if (ts != tileSig) { tileSig = ts; DrawTiles(); }
+        string dsig = DayNum + "|" + Offset("cdo") + "|" + Path;
+        if (dsig != drillSig) { drillSig = dsig; DrawDrill(); }
+        string cs = (Store.St["cm"]?.ToJsonString() ?? "") + "|" + Store.Td();
+        if (cs != chartSig) { chartSig = cs; DrawChart(); }
+    }
+
+    void DrawLog()
     {
         log.Children.Clear();
         var items = Store.Arr("tc").OfType<JsonObject>().TakeLast(8).Reverse().ToList();
@@ -211,7 +236,6 @@ public sealed partial class CodingPage : Page
             var t = UI.T(x["t"]?.ToString() ?? "", 14); Grid.SetColumn(t, 1); g.Children.Add(t);
             log.Children.Add(g);
         }
-        DrawIdea(); DrawTiles(); DrawDrill(); DrawTip(); DrawChart();
     }
 
     // ---------- Project idea (AI ideas from the website if there are any today, else the built-in list) ----------

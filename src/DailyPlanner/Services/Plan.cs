@@ -18,9 +18,19 @@ public static class Plan
     }
 
     // Today's practice focus (what the drill and "Aim focus" line show)
+    static (int, string) focusKey = (-1, ""); static string focusCache = "";
     public static string Focus
     {
         get
+        {
+            var key = (Store.Version, Store.Td());
+            if (key != focusKey) { focusCache = BuildFocus(); focusKey = key; }
+            return focusCache;
+        }
+    }
+
+    static string BuildFocus()
+    {
         {
             var st = Store.St; var G = GameData.Genre(st); string gid = GameData.GenreId(st);
             bool full = FullDay; int W = Weekday;

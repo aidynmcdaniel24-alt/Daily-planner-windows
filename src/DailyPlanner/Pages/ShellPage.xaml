@@ -22,10 +22,10 @@
             <Button x:Name="ExitFocus" Content="Exit focus mode" Style="{StaticResource AccentButtonStyle}" Visibility="Collapsed"
                     HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24" Padding="18,10" CornerRadius="10" Click="ExitFocus_Click" />
             <!-- Saving indicator -->
-            <Border x:Name="SyncBadge" Opacity="0" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,22,0"
+            <Border x:Name="SyncBadge" Visibility="Collapsed" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,22,0"
                     Padding="10,5,12,6" CornerRadius="99" Background="{ThemeResource PanelBrush}" BorderBrush="{ThemeResource LineBrush}" BorderThickness="1">
                 <StackPanel Orientation="Horizontal" Spacing="8">
-                    <ProgressRing IsActive="True" Width="12" Height="12" />
+                    <ProgressRing x:Name="SyncRing" IsActive="False" Width="12" Height="12" />
                     <TextBlock Text="Saving" FontSize="12" Style="{StaticResource Muted}" />
                 </StackPanel>
             </Border>

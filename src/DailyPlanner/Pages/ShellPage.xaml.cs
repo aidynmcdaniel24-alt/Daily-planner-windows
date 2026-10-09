@@ -74,11 +74,16 @@ public sealed partial class ShellPage : Page
         Theme.Changed -= OnTheme;
         if (App.Window != null) App.Window.Activated -= OnActivated;
         poll?.Stop(); minute?.Stop();
+        // let the open page clean up too (it stops listening for changes)
+        try { PageFrame.Navigate(typeof(Page), null, new SuppressNavigationTransitionInfo()); } catch { }
     }
 
+    // Only check the account every minute while the app is in front; pause when it's in the background
     async void OnActivated(object sender, WindowActivatedEventArgs e)
     {
-        if (e.WindowActivationState != WindowActivationState.Deactivated) await Pull();
+        if (e.WindowActivationState == WindowActivationState.Deactivated) { poll?.Stop(); return; }
+        poll?.Start();
+        await Pull();
     }
 
     static bool pulling;
@@ -146,6 +151,8 @@ public sealed partial class ShellPage : Page
         public required FontIcon Icon;
         public required TextBlock Label;
         public TextBlock? Badge;
+        public bool? On;          // last drawn state, so hover effects aren't restarted for nothing
+        public string BadgeText = "";
     }
     readonly List<NavView> navViews = new();
     readonly List<FrameworkElement> wideOnly = new();
@@ -191,7 +198,7 @@ public sealed partial class ShellPage : Page
         todayTrack = new Grid { Height = 6, CornerRadius = new CornerRadius(3), Background = UI.Res("Line2Brush") };
         todayFill = new Border { HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(3), Background = UI.Brand, Width = 0 };
         todayTrack.Children.Add(todayFill);
-        todayTrack.SizeChanged += (s, e) => DrawNav();
+        todayTrack.SizeChanged += (s, e) => DrawTodayFill();
         var todayHead = new Grid();
         todayHead.Children.Add(UI.M("Today", 12));
         todayPct.HorizontalAlignment = HorizontalAlignment.Right; todayHead.Children.Add(todayPct);
@@ -211,12 +218,12 @@ public sealed partial class ShellPage : Page
         var b = new Button
         {
             Content = content, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch,
-            Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent), BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(10), Padding = new Thickness(8, 7, 10, 7),
+            Background = UI.Clear, BorderThickness = new Thickness(0), CornerRadius = new CornerRadius(10), Padding = new Thickness(8, 7, 10, 7),
         };
         b.Resources["ButtonBackgroundPointerOver"] = UI.Res("HoverBrush");
         b.Resources["ButtonBackgroundPressed"] = UI.Res("SunkBrush");
-        b.Resources["ButtonBorderBrushPointerOver"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-        b.Resources["ButtonBorderBrushPressed"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        b.Resources["ButtonBorderBrushPointerOver"] = UI.Clear;
+        b.Resources["ButtonBorderBrushPressed"] = UI.Clear;
         b.Click += (s, e) => click();
         return b;
     }
@@ -241,45 +248,66 @@ public sealed partial class ShellPage : Page
         }
         var btn = Plain(g, () => Navigate(it.Tag));
         if (!main) btn.Padding = new Thickness(8, 4, 10, 4);
-        ToolTipService.SetToolTip(btn, it.Label);
         var bar = new Border { Width = 3, Height = 18, CornerRadius = new CornerRadius(2), HorizontalAlignment = HorizontalAlignment.Left, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(-10, 0, 0, 0), Background = Accent(it), Opacity = 0 };
         var holder = new Grid(); holder.Children.Add(btn); holder.Children.Add(bar);
         navViews.Add(new NavView { Item = it, Btn = btn, Bar = bar, IconBox = iconBox, Icon = icon, Label = label, Badge = badge });
         return holder;
     }
 
+    double todayShare;
+    string profKey = "";
+
     void DrawNav()
     {
         if (profName == null) return;
         string nm = Store.Name;
-        profName.Text = nm.Length > 0 ? nm : "Welcome";
-        profSub!.Text = Auth.Current != null ? "Synced with your account" : "Guest · saved on this PC";
-        avatarText!.Text = nm.Length > 0 ? nm[..1].ToUpperInvariant() : "\u263A";
+        string key = nm + "|" + (Auth.Current != null);
+        if (key != profKey)
+        {
+            profKey = key;
+            profName.Text = nm.Length > 0 ? nm : "Welcome";
+            profSub!.Text = Auth.Current != null ? "Synced with your account" : "Guest · saved on this PC";
+            avatarText!.Text = nm.Length > 0 ? nm[..1].ToUpperInvariant() : "\u263A";
+        }
 
+        int tot = 0, dn = 0;
         foreach (var v in navViews)
         {
             bool on = v.Item.Tag == current;
             var acc = Accent(v.Item);
-            v.Btn.Background = on ? UI.Res("NavActiveBrush") : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-            v.Bar.Opacity = on ? 1 : 0;
-            v.IconBox.Background = on ? UI.Tint(acc, 0.18) : new SolidColorBrush(Microsoft.UI.Colors.Transparent);
-            v.Icon.Foreground = on ? acc : UI.Muted;
-            v.Label.Foreground = on ? UI.Res("TextFillColorPrimaryBrush") : UI.Muted;
-            v.Label.FontWeight = on ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+            if (v.On != on)
+            {
+                v.On = on;
+                v.Btn.Background = on ? UI.Res("NavActiveBrush") : UI.Clear;
+                v.Bar.Opacity = on ? 1 : 0;
+                v.IconBox.Background = on ? UI.Tint(acc, 0.18) : UI.Clear;
+                v.Icon.Foreground = on ? acc : UI.Muted;
+                v.Label.Foreground = on ? UI.Res("TextFillColorPrimaryBrush") : UI.Muted;
+                v.Label.FontWeight = on ? Microsoft.UI.Text.FontWeights.SemiBold : Microsoft.UI.Text.FontWeights.Normal;
+            }
             if (v.Badge != null && v.Item.Lane != null)
             {
                 var (k, n) = Store.Count(v.Item.Lane);
+                tot += n; dn += Math.Min(k, n);
                 bool done = n > 0 && k >= n;
-                v.Badge.Text = done ? "\u2713" : $"{k}/{n}";
-                v.Badge.Foreground = done ? acc : UI.Res("TextFillColorTertiaryBrush");
-                v.Badge.FontWeight = done ? Microsoft.UI.Text.FontWeights.Bold : Microsoft.UI.Text.FontWeights.Normal;
+                string text = done ? "\u2713" : $"{k}/{n}";
+                if (text != v.BadgeText)
+                {
+                    v.BadgeText = text;
+                    v.Badge.Text = text;
+                    v.Badge.Foreground = done ? acc : UI.Res("TextFillColorTertiaryBrush");
+                    v.Badge.FontWeight = done ? Microsoft.UI.Text.FontWeights.Bold : Microsoft.UI.Text.FontWeights.Normal;
+                }
             }
         }
-        int tot = 0, dn = 0;
-        foreach (var l in Store.Lanes) { var (k, n) = Store.Count(l); tot += n; dn += Math.Min(k, n); }
-        double pct = tot == 0 ? 0 : (double)dn / tot;
-        if (todayPct != null) todayPct.Text = Math.Round(pct * 100) + "%";
-        if (todayFill != null && todayTrack != null) todayFill.Width = Math.Max(0, todayTrack.ActualWidth * pct);
+        todayShare = tot == 0 ? 0 : (double)dn / tot;
+        if (todayPct != null) todayPct.Text = Math.Round(todayShare * 100) + "%";
+        DrawTodayFill();
+    }
+
+    void DrawTodayFill()
+    {
+        if (todayFill != null && todayTrack != null) todayFill.Width = Math.Max(0, todayTrack.ActualWidth * todayShare);
     }
 
     void SetCompact(bool on, bool force = false)
@@ -288,7 +316,12 @@ public sealed partial class ShellPage : Page
         compact = on;
         Sidebar.Width = on ? 74 : 236;
         foreach (var e in wideOnly) e.Visibility = on ? Visibility.Collapsed : Visibility.Visible;
-        foreach (var v in navViews) v.Btn.HorizontalContentAlignment = on ? HorizontalAlignment.Center : HorizontalAlignment.Stretch;
+        foreach (var v in navViews)
+        {
+            v.Btn.HorizontalContentAlignment = on ? HorizontalAlignment.Center : HorizontalAlignment.Stretch;
+            // names on hover only when the labels are hidden
+            ToolTipService.SetToolTip(v.Btn, on ? v.Item.Label : null);
+        }
     }
 
     void OnTheme()
@@ -377,7 +410,13 @@ public sealed partial class ShellPage : Page
         toastTimer.Start();
     }
 
-    void OnSync(bool on) { SyncBadge.Opacity = on ? 1 : 0; DrawNav(); }
+    void OnSync(bool on)
+    {
+        // the spinner only runs while actually saving (a hidden spinner still uses power)
+        SyncRing.IsActive = on;
+        SyncBadge.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        DrawNav();
+    }
 
     async void OnKicked()
     {

@@ -60,7 +60,19 @@ public static class GameData
     }
 
     // Everything about this person's game type, with the AI plan on top if there is one
+    // Saved copy for the planner's current version (building it means copying a big chunk of data)
+    static int genreVer = -1; static JsonObject? genreCache;
     public static JsonObject Genre(JsonObject s)
+    {
+        if (ReferenceEquals(s, Store.St))
+        {
+            if (genreVer != Store.Version || genreCache == null) { genreCache = BuildGenre(s); genreVer = Store.Version; }
+            return genreCache;
+        }
+        return BuildGenre(s);
+    }
+
+    static JsonObject BuildGenre(JsonObject s)
     {
         var g = (Genres[GenreId(s)] ?? Genres["general"] ?? new JsonObject()).DeepClone().AsObject();
         if (AiPlan(s) is JsonObject gp && gp["plan"] is JsonObject plan)
@@ -112,18 +124,23 @@ public static class GameData
     public record CodeDrill(Drill Drill, List<string> Paths);
     public record Site(string Name, string Url, string Desc, string Group, List<string> Paths);
 
-    public static List<CodeDrill> CodeDrills() =>
+    static List<CodeDrill>? codeDrills; static List<string>? codeTips; static List<Site>? codeSites;
+    static List<(string, string, string)>? projects;
+    public static List<CodeDrill> CodeDrills() => codeDrills ??= ReadCodeDrills();
+    public static List<string> CodeTips() => codeTips ??= Strings(Data["CODE_TIPS"]);
+    public static List<Site> CodeSites() => codeSites ??= ReadSites();
+
+    static List<CodeDrill> ReadCodeDrills() =>
         ((Data["CODE_DRILLS"] as JsonArray) ?? new JsonArray()).OfType<JsonObject>().Select(d => new CodeDrill(new Drill(
             d["name"]?.ToString() ?? "", d["time"]?.ToString() ?? "", Strings(d["steps"]), d["tip"]?.ToString() ?? "", new()), Strings(d["paths"]))).ToList();
 
-    public static List<string> CodeTips() => Strings(Data["CODE_TIPS"]);
-
-    public static List<Site> CodeSites() =>
+    static List<Site> ReadSites() =>
         ((Data["CODE_SITES"] as JsonArray) ?? new JsonArray()).OfType<JsonArray>().Where(a => a.Count >= 5)
             .Select(a => new Site(a[0]!.ToString(), a[1]!.ToString(), a[2]!.ToString(), a[3]!.ToString(), Strings(a[4]))).ToList();
 
     // [type, title, description] — type "p" is Python, "w" is web
-    public static List<(string Type, string Title, string Desc)> Projects() =>
+    public static List<(string Type, string Title, string Desc)> Projects() => projects ??= ReadProjects();
+    static List<(string Type, string Title, string Desc)> ReadProjects() =>
         ((Data["PROJECTS"] as JsonArray) ?? new JsonArray()).OfType<JsonArray>()
             .Select(p => (p[0]?.ToString() ?? "", p[1]?.ToString() ?? "", p.Count > 2 ? p[2]?.ToString() ?? "" : "")).ToList();
 }

@@ -43,7 +43,7 @@ public sealed class ChecklistCard : UserControl
         Grid.SetColumn(bar, 1); prog.Children.Add(bar);
 
         Content = UI.Card(Info[lane].glyph, Info[lane].title, sub, UI.Lane(lane), streak, Extra, prog, rows, editBtn, editor);
-        Loaded += (s, e) => { Store.Changed += Draw; Draw(); };
+        Loaded += (s, e) => { Store.Changed -= Draw; Store.Changed += Draw; Draw(); };
         Unloaded += (s, e) => Store.Changed -= Draw;
     }
 
@@ -74,7 +74,7 @@ public sealed class ChecklistCard : UserControl
 
     Grid Row(TaskItem t, bool last)
     {
-        var g = new Grid { Padding = new Thickness(4, 10, 4, 10), ColumnSpacing = 2, Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent) };
+        var g = new Grid { Padding = new Thickness(4, 10, 4, 10), ColumnSpacing = 2, Background = UI.Clear };
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         g.ColumnDefinitions.Add(new ColumnDefinition());
         var cb = new CheckBox { IsChecked = t.Done, VerticalAlignment = VerticalAlignment.Top, MinWidth = 0 };

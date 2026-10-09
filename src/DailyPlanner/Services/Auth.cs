@@ -171,12 +171,13 @@ public static class Auth
             var r = await Http.PostJson(IdBase + "lookup" + Key, new JsonObject { ["idToken"] = await Token() });
             var u = r["users"]?[0];
             if (u == null) return;
+            string before = Current.Email + Current.Name + Current.Verified + Current.UsesPassword;
             Current.Email = u["email"]?.ToString() ?? Current.Email;
             Current.Name = u["displayName"]?.ToString() ?? Current.Name;
             Current.Verified = u["emailVerified"]?.ToString() == "true";
             Current.UsesPassword = u["passwordHash"] != null
                 || (u["providerUserInfo"] as JsonArray)?.Any(p => p?["providerId"]?.ToString() == "password") == true;
-            SaveSession();
+            if (before != Current.Email + Current.Name + Current.Verified + Current.UsesPassword) SaveSession();
         }
         catch { }
     }

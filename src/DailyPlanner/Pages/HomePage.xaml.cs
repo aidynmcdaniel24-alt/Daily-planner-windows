@@ -58,7 +58,7 @@ public sealed partial class HomePage : Page
         nextCard.Background = new LinearGradientBrush
         {
             StartPoint = new Windows.Foundation.Point(0, 0), EndPoint = new Windows.Foundation.Point(1, 1), Opacity = 0.22,
-            GradientStops = { new GradientStop { Color = Windows.UI.Color.FromArgb(255, 0x6D, 0x5C, 0xFF), Offset = 0 }, new GradientStop { Color = Microsoft.UI.Colors.Transparent, Offset = 0.8 } },
+            GradientStops = { new GradientStop { Color = Windows.UI.Color.FromArgb(255, 0x6D, 0x5C, 0xFF), Offset = 0 }, new GradientStop { Color = Windows.UI.Color.FromArgb(0, 0x6D, 0x5C, 0xFF), Offset = 0.8 } },
         };
         nextDone = UI.Btn("Done", () => { if (next is { } n) Store.SetDone(n.lane, n.index, true); }, true, "");
         nextDone.VerticalAlignment = VerticalAlignment.Center;
@@ -180,17 +180,17 @@ public sealed partial class HomePage : Page
         hello.Text = part + (Store.Name.Length > 0 ? ", " + Store.Name : "");
         date.Text = DateTime.Now.ToString("dddd, MMMM d").ToUpperInvariant();
         sub.Text = h < 5 ? "Get some sleep. Your plan will be here tomorrow." : "Here's your plan for today.";
-        goals.Children.Clear();
-        foreach (var g in Store.Goals) goals.Children.Add(UI.Pill(g));
+        var gl = Store.Str("gl");
+        if (gl != goalsKey) { goalsKey = gl; goals.Children.Clear(); foreach (var g in Store.Goals) goals.Children.Add(UI.Pill(g)); }
         SetBar(setupBar, !Store.SetUp && setupBar.Tag == null);
 
         // Rings
         int all = 0, done = 0;
-        lanes.Children.Clear();
-        foreach (var lane in Store.Lanes)
+        if (laneViews.Count == 0) foreach (var lane in Store.Lanes) lanes.Children.Add(LaneRow(lane));
+        foreach (var v in laneViews)
         {
-            var (k, n) = Store.Count(lane); all += n; done += k;
-            lanes.Children.Add(LaneRow(lane, k, n));
+            var (k, n) = Store.Count(v.Lane); all += n; done += k;
+            v.Update(k, n, Store.Streak(v.Lane));
         }
         int pct = all == 0 ? 0 : (int)Math.Round(100.0 * done / all);
         allRing.Value = pct; allPct.Text = pct + "%";
@@ -220,30 +220,65 @@ public sealed partial class HomePage : Page
         DrawQuote();
     }
 
-    UIElement LaneRow(string lane, int k, int n)
+    string? goalsKey;
+    readonly List<LaneView> laneViews = new();
+
+    // One row per lane (ring, name, "2/4 done", streak). Built once, then only the numbers change.
+    sealed class LaneView
     {
-        var color = UI.Lane(lane); int streak = Store.Streak(lane);
-        string[] icons = { "", "", "" };
+        public required string Lane;
+        public required ProgressRing Ring;
+        public required TextBlock Sub, Streak;
+        string last = "";
+        public void Update(int k, int n, int streak)
+        {
+            string key = $"{k}/{n}/{streak}";
+            if (key == last) return; last = key;
+            Ring.Value = n == 0 ? 0 : 100.0 * k / n;
+            bool all = n > 0 && k == n;
+            Sub.Text = all ? "All done" : $"{k}/{n} done";
+            Sub.Foreground = all ? UI.Res("CodingBrush") : UI.Muted;
+            Streak.Text = streak > 0 ? "\U0001F525 " + streak : "";
+            ToolTipService.SetToolTip(Streak, streak > 0 ? UI.Plural(streak, "day", "days") + " streak" : null);
+        }
+    }
+
+    UIElement LaneRow(string lane)
+    {
+        var color = UI.Lane(lane);
+        string[] icons = { "\uE7FC", "\uE708", "\uE943" };
         var ring = new Grid { Width = 38, Height = 38 };
-        ring.Children.Add(new ProgressRing { IsIndeterminate = false, Width = 38, Height = 38, Maximum = 100, Value = n == 0 ? 0 : 100.0 * k / n, Foreground = color, Background = UI.Res("Line2Brush") });
+        var pr = new ProgressRing { IsIndeterminate = false, Width = 38, Height = 38, Maximum = 100, Foreground = color, Background = UI.Res("Line2Brush") };
+        ring.Children.Add(pr);
         ring.Children.Add(new FontIcon { Glyph = icons[Array.IndexOf(Store.Lanes, lane)], FontSize = 15, Foreground = color, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
-        var text = UI.Stack(0, UI.T(Store.LaneNames[lane], 14, true), UI.T(n > 0 && k == n ? "All done" : $"{k}/{n} done", 12, false, n > 0 && k == n ? UI.Res("CodingBrush") : UI.Muted));
+        var subText = UI.T("", 12, false, UI.Muted);
+        var text = UI.Stack(0, UI.T(Store.LaneNames[lane], 14, true), subText);
         text.VerticalAlignment = VerticalAlignment.Center;
         var grid = new Grid { ColumnSpacing = 12 };
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.ColumnDefinitions.Add(new ColumnDefinition());
         grid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         grid.Children.Add(ring); Grid.SetColumn(text, 1); grid.Children.Add(text);
-        if (streak > 0) { var sk = UI.T("\U0001F525 " + streak, 13, true, UI.Res("StreakBrush")); sk.VerticalAlignment = VerticalAlignment.Center; ToolTipService.SetToolTip(sk, UI.Plural(streak, "day", "days") + " streak"); Grid.SetColumn(sk, 2); grid.Children.Add(sk); }
-        var b = new Button { Content = grid, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch, Background = new SolidColorBrush(Microsoft.UI.Colors.Transparent), BorderThickness = new Thickness(0), Padding = new Thickness(6) };
+        var sk = UI.T("", 13, true, UI.Res("StreakBrush")); sk.VerticalAlignment = VerticalAlignment.Center; Grid.SetColumn(sk, 2); grid.Children.Add(sk);
+        var b = new Button { Content = grid, HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch, Background = UI.Clear, BorderThickness = new Thickness(0), Padding = new Thickness(6), CornerRadius = new CornerRadius(12) };
+        b.Resources["ButtonBackgroundPointerOver"] = UI.Res("HoverBrush");
+        b.Resources["ButtonBorderBrushPointerOver"] = UI.Clear;
         b.Click += (s, e) => ShellPage.Current?.OpenLane(lane);
+        laneViews.Add(new LaneView { Lane = lane, Ring = pr, Sub = subText, Streak = sk });
         return b;
     }
 
+    string quoteKey = "";
+    int quoteRun;
     async void DrawQuote()
     {
         string type = Store.Str("qm"); if (type.Length == 0) type = "mix";
         string mood = Store.Str("qmo"); if (mood.Length == 0) mood = "any";
+        // only redraw the quote when something about it changed (type, mood, "new quote", or the hour)
+        string key = $"{type}|{mood}|{shift}|{Store.Str("qsh")}|{DateTime.Now:yyyyMMddHH}|{ContentData.QuotesList.Count}";
+        if (key == quoteKey) return;
+        quoteKey = key;
+        int run = ++quoteRun;
         foreach (var b in typeRow.Children.OfType<ToggleButton>()) b.IsChecked = (string)b.Tag == type;
         foreach (var b in moodRow.Children.OfType<ToggleButton>()) b.IsChecked = (string)b.Tag == mood;
         int s = shift + (int)Store.Num(Store.St["qsh"]);
@@ -252,8 +287,10 @@ public sealed partial class HomePage : Page
         if (q.VerseRef != null && q.Text.Length == 0)
         {
             quote.Text = "Loading verse…";
-            if (await ContentData.LoadVerse(q.VerseRef)) quote.Text = "“" + ContentData.VerseText(q.VerseRef) + "”";
-            else quote.Text = q.VerseRef;
+            bool ok = await ContentData.LoadVerse(q.VerseRef);
+            if (run != quoteRun) return;   // a newer quote was picked while this one loaded
+            quote.Text = ok ? "“" + ContentData.VerseText(q.VerseRef) + "”" : q.VerseRef;
+            if (!ok) quoteKey = "";        // try again next time
         }
         else quote.Text = "“" + q.Text + "”";
     }

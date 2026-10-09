@@ -19,7 +19,6 @@ public sealed partial class LeaderboardPage : Page
     readonly TextBox codeBox = new() { PlaceholderText = "ABC123", MaxLength = 6, CharacterCasing = CharacterCasing.Upper, FontFamily = UI.Mono };
     readonly InfoBar msg = new() { IsOpen = false, IsClosable = true };
     readonly Border count = UI.Pill("");
-    DispatcherTimer? nameTimer;
 
     public LeaderboardPage()
     {
@@ -27,23 +26,22 @@ public sealed partial class LeaderboardPage : Page
         root.Children.Add(UI.PageTitle("Leaderboard", "Compete with friends", "Compare streaks, send a nudge, keep each other going."));
         root.Children.Add(body);
         Content = new ScrollViewer { Content = root, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
-        nameBox.TextChanged += (s, e) =>
+        // Saves your name a moment after you stop typing (one timer, reused)
+        var nameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
+        nameTimer.Tick += async (a, b) =>
         {
-            nameTimer?.Stop();
-            nameTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(800) };
-            nameTimer.Tick += async (a, b) =>
-            {
-                nameTimer?.Stop();
-                var v = nameBox.Text.Trim(); if (v.Length == 0 || Board.Lb == null) return;
-                var bad = Board.NameProblem(v);
-                if (bad != null) { Show(bad); return; }
-                Board.Lb["name"] = v; Store.Save(false);
-                try { await Board.Update(); await DrawList(); } catch { }
-            };
-            nameTimer.Start();
+            nameTimer.Stop();
+            var v = nameBox.Text.Trim(); if (v.Length == 0 || Board.Lb == null) return;
+            if (v == Board.Lb["name"]?.ToString()) return;   // nothing changed
+            var bad = Board.NameProblem(v);
+            if (bad != null) { Show(bad); return; }
+            Board.Lb["name"] = v; Store.Save(false);
+            try { await Board.Update(); await DrawList(); } catch { }
         };
+        nameBox.TextChanged += (s, e) => { if (settingName) return; nameTimer.Stop(); nameTimer.Start(); };
     }
 
+    bool settingName;
     protected override async void OnNavigatedTo(NavigationEventArgs e) => await Draw();
 
     static UIElement Empty(string title, string text, Button? action)
@@ -102,7 +100,7 @@ public sealed partial class LeaderboardPage : Page
         });
         var codeRow = new Grid { Padding = new Thickness(16, 12, 12, 12), Background = UI.Res("SubtleFillColorSecondaryBrush"), CornerRadius = new CornerRadius(12) };
         codeRow.Children.Add(codeText); copy.HorizontalAlignment = HorizontalAlignment.Right; copy.VerticalAlignment = VerticalAlignment.Center; codeRow.Children.Add(copy);
-        nameBox.Text = Board.Lb["name"]?.ToString() ?? "";
+        settingName = true; nameBox.Text = Board.Lb["name"]?.ToString() ?? ""; settingName = false;
         body.Children.Add(UI.Card("", "Your friend code", "Share it so friends can add you.", null, null, codeRow, nameBox));
 
         // Friends

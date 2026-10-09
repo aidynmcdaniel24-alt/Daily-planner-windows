@@ -35,15 +35,10 @@ public static class Store
     {
         try { St = File.Exists(StateFile) ? JsonNode.Parse(File.ReadAllText(StateFile)) as JsonObject ?? new() : new(); }
         catch { St = new(); }
+        Version++;
     }
 
-    static void WriteFile()
-    {
-        Directory.CreateDirectory(Folder);
-        string tmp = StateFile + ".tmp";
-        File.WriteAllText(tmp, St.ToJsonString());
-        File.Move(tmp, StateFile, true);
-    }
+    static void WriteFile() { dirty = true; Flush(false); }
 
     // Saves the planner. Disk writes and redraws are batched so typing stays smooth.
     // redraw: false is for text boxes (nothing else on screen needs to change while typing)
@@ -51,11 +46,11 @@ public static class Store
     {
         if (Ui != null && !Ui.HasThreadAccess) { Ui.TryEnqueue(() => Save(redraw)); return; }
         St["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+        Version++;
         dirty = true;
-        if (Ui == null) Flush(); else Later(ref writeTimer, 350, Flush);
+        if (Ui == null) Flush(); else Later(ref writeTimer, 350, () => Flush(true));
         QueuePush();
-        if (redraw) Raise();
-        Saved?.Invoke();
+        if (redraw) { Raise(); Saved?.Invoke(); }
     }
 
     static bool dirty;
@@ -68,18 +63,39 @@ public static class Store
     }
 
     // Writes any unsaved changes to disk now (also called when the app closes)
-    public static void Flush()
+    public static void Flush() { Flush(false); lock (fileLock) { } }   // also waits for a write already running
+    static int fileGen;
+    static readonly object fileLock = new();
+    static void Flush(bool background)
     {
         if (!dirty) return;
         dirty = false;
-        try { WriteFile(); } catch (Exception e) { App.Log("Save failed: " + e.Message); }
+        string json = St.ToJsonString();   // copy on the UI thread...
+        int gen = fileGen;
+        void Write()
+        {
+            lock (fileLock)
+            {
+                if (gen != fileGen) return;    // signed out since then: don't bring the data back
+                try
+                {
+                    Directory.CreateDirectory(Folder);
+                    string tmp = StateFile + ".tmp";
+                    File.WriteAllText(tmp, json);
+                    File.Move(tmp, StateFile, true);
+                }
+                catch (Exception e) { App.Log("Save failed: " + e.Message); }
+            }
+        }
+        if (background) Task.Run(Write); else Write();   // ...then write it to disk in the background
     }
 
     public static void Replace(JsonObject next)
     {
         St = next;
-        dirty = false;
-        WriteFile();
+        Version++;
+        dirty = true;
+        Flush(true);
         Raise();
     }
 
@@ -105,9 +121,21 @@ public static class Store
     // The person's own edited list (st.ct) if they have one, otherwise the built-in plan
     public static List<(string Title, string Note)> Tasks(string lane)
     {
-        var custom = Parse((St["ct"] as JsonObject)?[lane]);
-        return custom.Count > 0 ? custom : Plan.Defaults(lane);
+        // Building the gaming plan is real work, so keep the result until the planner (or the day) changes
+        var key = (Version, Td());
+        if (key != tasksKey) { tasksCache.Clear(); tasksKey = key; }
+        if (!tasksCache.TryGetValue(lane, out var list))
+        {
+            var custom = Parse((St["ct"] as JsonObject)?[lane]);
+            tasksCache[lane] = list = custom.Count > 0 ? custom : Plan.Defaults(lane);
+        }
+        return new List<(string, string)>(list);   // a copy, so callers can change it safely
     }
+    static (int, string) tasksKey = (-1, "");
+    static readonly Dictionary<string, List<(string, string)>> tasksCache = new();
+
+    // Goes up every time the planner changes (used to know when saved results are out of date)
+    public static int Version { get; private set; }
 
     public static bool FullDay => Plan.FullDay;
 
@@ -264,7 +292,7 @@ public static class Store
         if (cloud != null && cloudTs == localTs) return "same";
         St["acct"] = s.Uid;
         if (localTs == 0) St["ts"] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
-        Flush(); WriteFile();
+        WriteFile();
         await Cloud.Push(s.Uid, St.ToJsonString());
         return "up";
     }
@@ -279,8 +307,9 @@ public static class Store
     public static void ClearLocal()
     {
         St = new JsonObject();
+        Version++;
         dirty = false; writeTimer?.Stop(); pushTimer?.Stop();
-        try { File.Delete(StateFile); } catch { }
+        lock (fileLock) { fileGen++; try { File.Delete(StateFile); } catch { } }
         Raise();
     }
 }

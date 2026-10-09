@@ -66,7 +66,9 @@ public static class FocusTimer
 
     static void Step()
     {
-        Left = Math.Max(0, (int)Math.Round((end - DateTime.UtcNow).TotalSeconds));
+        int now = Math.Max(0, (int)Math.Round((end - DateTime.UtcNow).TotalSeconds));
+        if (now == Left && now > 0) return;   // same second as last time: nothing to redraw
+        Left = now;
         if (Left <= 0)
         {
             Halt(); Log();

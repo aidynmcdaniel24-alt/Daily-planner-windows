@@ -52,6 +52,7 @@ public sealed partial class GamingPage : Page
 
         // ---- Today's drill ----
         var exp = new Expander { Header = "All drill guides", HorizontalAlignment = HorizontalAlignment.Stretch, HorizontalContentAlignment = HorizontalAlignment.Stretch, Content = allDrills };
+        drillsExp = exp; exp.Expanding += (s, e) => BuildAllDrills();
         L.Main.Children.Add(UI.Card("", "Today's drill", null, UI.Lane("gaming"), null, drillBox, exp));
 
         // ---- Score tracker ----
@@ -118,22 +119,40 @@ public sealed partial class GamingPage : Page
         Store.Changed -= Refresh;
     }
 
+    // Only redraw the parts whose data actually changed (ticking a checkbox shouldn't rebuild charts)
+    string drillSig = "", tiltSig = "", scoreSig = "", rankSig = "";
     void Refresh()
     {
         G = GameData.Genre(Store.St);
         string foc = Plan.Focus;
         focusLine.Text = GameData.G(G, "focus") + " today: " + foc;
-        DrawDrills(foc); DrawTilt(); DrawScores(); DrawRanks();
+        string ds = GameData.GenreId(Store.St) + "|" + foc + "|" + G["ai"] + "|" + G["game"];
+        if (ds != drillSig) { drillSig = ds; DrawDrills(foc); }
+        string ts = Store.Td() + "|" + Store.Arr("tl").Count + "|" + (Store.Arr("tl").LastOrDefault()?.ToJsonString() ?? "");
+        if (ts != tiltSig) { tiltSig = ts; DrawTilt(); }
+        string ss = Store.Arr("sc").Count + "|" + (Store.Arr("sc").LastOrDefault()?.ToJsonString() ?? "") + "|" + G["scores"]?.ToJsonString();
+        if (ss != scoreSig) { scoreSig = ss; DrawScores(); }
+        string rs = Store.Arr("rkl").Count + "|" + (Store.Arr("rkl").LastOrDefault()?.ToJsonString() ?? "") + "|" + Store.Str("gm") + Store.Str("gn");
+        if (rs != rankSig) { rankSig = rs; DrawRanks(); }
     }
 
     // ---------- Drill guide ----------
     void DrawDrills(string foc)
     {
         var today = GameData.DrillFor(G, foc);
-        drillBox.Children.Clear(); allDrills.Children.Clear();
+        drillBox.Children.Clear(); allDrills.Children.Clear(); allBuilt = false;
         if (today == null) { drillBox.Children.Add(UI.M("No drills for this game type yet.")); return; }
         drillBox.Children.Add(DrillView(today));
-        foreach (var d in GameData.Drills(G).Where(d => d.Name != today.Name)) allDrills.Children.Add(DrillView(d));
+        todayDrill = today.Name;
+        if (drillsExp?.IsExpanded == true) BuildAllDrills();
+    }
+
+    // The other drill guides are only built when "All drill guides" is opened
+    bool allBuilt; string todayDrill = ""; Expander? drillsExp;
+    void BuildAllDrills()
+    {
+        if (allBuilt) return; allBuilt = true;
+        foreach (var d in GameData.Drills(G).Where(d => d.Name != todayDrill)) allDrills.Children.Add(DrillView(d));
     }
 
     internal static UIElement DrillView(Drill d, string lane = "gaming")

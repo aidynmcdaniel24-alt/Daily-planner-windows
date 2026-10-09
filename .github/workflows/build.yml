@@ -125,6 +125,12 @@ jobs:
             Start-Sleep -Seconds 12
             $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
             $bmp.Save("smoke\$pg-dark.png")
+            if ($pg -eq "home") {
+              # hover over "Gaming" in the sidebar and grab a few frames to catch any flashing
+              [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(100, 217)
+              foreach ($i in 0..5) { Start-Sleep -Milliseconds 30; $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size); $bmp.Save("smoke\hover$i.png") }
+              [System.Windows.Forms.Cursor]::Position = New-Object System.Drawing.Point(600, 700)
+            }
             if ($p.HasExited) { Write-Host "::error::The $pg page (dark) closed by itself"; exit 1 }
             Stop-Process -Id $p.Id; Start-Sleep -Seconds 2
           }

@@ -20,6 +20,23 @@ public static class UI
     }
     public static Brush Lane(string lane) => Res(char.ToUpper(lane[0]) + lane[1..] + "Brush");
     public static Brush Muted => Res("TextFillColorSecondaryBrush");
+
+    // "Invisible" background. Plain Transparent is see-through WHITE, so hover fades flash light grey
+    // in dark mode; this one is see-through in the hover color, so fades stay smooth.
+    static readonly Dictionary<string, SolidColorBrush> clear = new();
+    public static SolidColorBrush Clear
+    {
+        get
+        {
+            var t = Theme.Current;
+            if (!clear.TryGetValue(t, out var b))
+            {
+                var h = ((SolidColorBrush)Res("HoverBrush")).Color;
+                clear[t] = b = new SolidColorBrush(Color.FromArgb(0, h.R, h.G, h.B));
+            }
+            return b;
+        }
+    }
     public static Brush Brand => Res("BrandBrush");
     public static SolidColorBrush Solid(byte r, byte g, byte b, byte a = 255) => new(Color.FromArgb(a, r, g, b));
     public static Brush Tint(Brush b, double opacity) => new SolidColorBrush(((SolidColorBrush)b).Color) { Opacity = opacity };
@@ -85,7 +102,12 @@ public static class UI
             BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Padding = new Thickness(padding), Child = child,
         };
         card.PointerEntered += (s, e) => card.BorderBrush = Res("Line2Brush");
-        card.PointerExited += (s, e) => card.BorderBrush = Res("CardStrokeColorDefaultBrush");
+        card.PointerExited += (s, e) =>
+        {
+            var p = e.GetCurrentPoint(card).Position;
+            if (p.X > 0 && p.Y > 0 && p.X < card.ActualWidth && p.Y < card.ActualHeight) return;
+            card.BorderBrush = Res("CardStrokeColorDefaultBrush");
+        };
         return card;
     }
 
@@ -200,7 +222,7 @@ public static class UI
         r["ToggleButtonBorderBrushChecked"] = accent;
         r["ToggleButtonBorderBrushCheckedPointerOver"] = accent;
         r["ToggleButtonBorderBrushCheckedPressed"] = accent;
-        r["ToggleButtonBackground"] = new SolidColorBrush(Microsoft.UI.Colors.Transparent);
+        r["ToggleButtonBackground"] = Clear;
         b.BorderThickness = new Thickness(1);
         return b;
     }

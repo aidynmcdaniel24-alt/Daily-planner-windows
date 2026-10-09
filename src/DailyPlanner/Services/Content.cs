@@ -120,22 +120,37 @@ public static class Content
 
     public static string VerseText(string reference) => verseText.TryGetValue(reference, out var t) ? t : "";
 
-    // Loads a verse's exact text from bible-api.com and saves it
-    public static async Task<bool> LoadVerse(string reference)
+    // Loads a verse's exact text from bible-api.com and saves it (one request per verse at a time;
+    // if it fails, waits a minute before trying that verse again)
+    static readonly Dictionary<string, Task<bool>> loading = new();
+    static readonly Dictionary<string, DateTime> failedAt = new();
+    static readonly HttpClient web = new() { Timeout = TimeSpan.FromSeconds(10) };
+
+    public static Task<bool> LoadVerse(string reference)
     {
-        if (VerseText(reference).Length > 0) return true;
+        if (VerseText(reference).Length > 0) return Task.FromResult(true);
+        if (failedAt.TryGetValue(reference, out var f) && (DateTime.Now - f).TotalSeconds < 60) return Task.FromResult(false);
+        if (loading.TryGetValue(reference, out var running)) return running;
+        var t = Fetch(reference);
+        loading[reference] = t;
+        return t;
+    }
+
+    static async Task<bool> Fetch(string reference)
+    {
         try
         {
             string url = "https://bible-api.com/" + Uri.EscapeDataString(reference).Replace("%20", "+") + "?translation=kjv";
-            var r = JsonNode.Parse(await new HttpClient { Timeout = TimeSpan.FromSeconds(10) }.GetStringAsync(url));
+            var r = JsonNode.Parse(await web.GetStringAsync(url));
             string text = System.Text.RegularExpressions.Regex.Replace(r?["text"]?.ToString() ?? "", @"\s+", " ").Trim();
-            if (text.Length == 0) return false;
+            if (text.Length == 0) { failedAt[reference] = DateTime.Now; return false; }
             verseText[reference] = text;
             var o = new JsonObject(); foreach (var kv in verseText) o[kv.Key] = kv.Value;
             Directory.CreateDirectory(Store.Folder);
-            File.WriteAllText(CacheFile, o.ToJsonString());
+            await File.WriteAllTextAsync(CacheFile, o.ToJsonString());
             return true;
         }
-        catch { return false; }
+        catch { failedAt[reference] = DateTime.Now; return false; }
+        finally { loading.Remove(reference); }
     }
 }
