@@ -10,7 +10,7 @@
 
                 <StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
                     <Image Source="ms-appx:///Assets/Logo64.png" Width="34" Height="34" />
-                    <TextBlock Text="Daily Planner" FontSize="18" FontWeight="SemiBold" VerticalAlignment="Center" />
+                    <TextBlock Text="Daily Planner" FontSize="20" FontWeight="Bold" VerticalAlignment="Center" />
                 </StackPanel>
 
                 <Border Style="{StaticResource Card}" Padding="26">
@@ -22,7 +22,7 @@
 
                         <StackPanel x:Name="Body" Spacing="14">
                             <StackPanel Spacing="4">
-                                <TextBlock x:Name="Title" Text="Welcome back" FontSize="26" FontWeight="SemiBold" HorizontalAlignment="Center" />
+                                <TextBlock x:Name="Title" Text="Welcome back" FontSize="28" FontWeight="Bold" CharacterSpacing="-20" HorizontalAlignment="Center" />
                                 <TextBlock x:Name="Sub" Text="Log in to sync your plan across devices." Style="{StaticResource Muted}" HorizontalAlignment="Center" TextAlignment="Center" />
                             </StackPanel>
 
@@ -32,7 +32,7 @@
 
                             <InfoBar x:Name="Message" IsClosable="False" IsOpen="False" />
 
-                            <Button x:Name="Go" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Height="40" Click="Go_Click">
+                            <Button x:Name="Go" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Stretch" Height="40" Click="Go_Click" CornerRadius="10">
                                 <Grid>
                                     <TextBlock x:Name="GoText" Text="Log in" />
                                     <ProgressRing x:Name="GoBusy" IsActive="False" Width="18" Height="18" Foreground="White" />
@@ -51,7 +51,7 @@
                                 <Rectangle Grid.Column="2" Height="1" Fill="{ThemeResource DividerStrokeColorDefaultBrush}" VerticalAlignment="Center" />
                             </Grid>
 
-                            <Button x:Name="Google" HorizontalAlignment="Stretch" Height="40" Click="Google_Click">
+                            <Button x:Name="Google" HorizontalAlignment="Stretch" Height="40" CornerRadius="10" Click="Google_Click">
                                 <StackPanel Orientation="Horizontal" Spacing="10">
                                     <TextBlock Text="G" FontWeight="Bold" Foreground="#4285F4" />
                                     <TextBlock x:Name="GoogleText" Text="Continue with Google" />
