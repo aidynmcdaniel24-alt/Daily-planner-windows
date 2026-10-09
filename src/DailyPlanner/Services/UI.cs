@@ -46,7 +46,7 @@ public static class UI
     }
 
     // A rounded card with an icon, a title, an optional subtitle and something on the right
-    public static Border Card(string glyph, string title, string? sub, Brush? color, UIElement? right, params UIElement[] body)
+    public static Border Card(string glyph, string title, string? sub, Brush? color, FrameworkElement? right, params UIElement[] body)
     {
         var head = new Grid { ColumnSpacing = 12, Margin = new Thickness(0, 0, 0, 4) };
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
@@ -60,7 +60,7 @@ public static class UI
         if (!string.IsNullOrEmpty(sub)) titles.Children.Add(M(sub));
         titles.VerticalAlignment = VerticalAlignment.Center;
         Grid.SetColumn(titles, 1); head.Children.Add(titles);
-        if (right != null) { if (right is FrameworkElement fe) fe.VerticalAlignment = VerticalAlignment.Top; Grid.SetColumn(right, 2); head.Children.Add(right); }
+        if (right != null) { right.VerticalAlignment = VerticalAlignment.Top; Grid.SetColumn(right, 2); head.Children.Add(right); }
 
         var inner = Stack(12, head);
         foreach (var b in body) inner.Children.Add(b);
@@ -97,7 +97,7 @@ public static class UI
     }
 
     // Two equal columns that stack on narrow windows
-    public static Grid Two(UIElement a, UIElement b, double gap = 12)
+    public static Grid Two(FrameworkElement a, FrameworkElement b, double gap = 12)
     {
         var g = new Grid { ColumnSpacing = gap };
         g.ColumnDefinitions.Add(new ColumnDefinition());
