@@ -4,61 +4,31 @@
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     Background="Transparent">
 
-    <Grid>
-        <NavigationView x:Name="Nav"
-                        PaneDisplayMode="Auto"
-                        CompactModeThresholdWidth="900"
-                        ExpandedModeThresholdWidth="1100"
-                        IsBackButtonVisible="Collapsed"
-                        IsSettingsVisible="True"
-                        OpenPaneLength="220"
-                        SelectionChanged="Nav_SelectionChanged"
-                        ItemInvoked="Nav_ItemInvoked">
-            <NavigationView.MenuItems>
-                <NavigationViewItem Content="Home" Tag="home">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE80F;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItemSeparator />
-                <NavigationViewItem x:Name="NavGaming" Content="Gaming" Tag="gaming">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE7FC;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Name="NavSleep" Content="Sleep" Tag="sleep">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE708;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Name="NavCoding" Content="Coding" Tag="coding">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE943;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem x:Name="NavSummary" Content="Summary" Tag="summary">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9D2;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItemSeparator />
-                <NavigationViewItem x:Name="NavBoard" Content="Leaderboard" Tag="board">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE734;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.MenuItems>
-            <NavigationView.FooterMenuItems>
-                <NavigationViewItem Content="Focus mode" Tag="focus" SelectsOnInvoked="False">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xF272;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-                <NavigationViewItem Content="Open the website" Tag="web" SelectsOnInvoked="False">
-                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon>
-                </NavigationViewItem>
-            </NavigationView.FooterMenuItems>
+    <Grid x:Name="Root">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
 
-            <Grid>
-                <Frame x:Name="PageFrame" />
-                <!-- Pops up when a checklist is finished -->
-                <InfoBar x:Name="Toast" IsOpen="False" Severity="Success" IsClosable="True"
-                         HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24" MaxWidth="460" />
-                <Button x:Name="ExitFocus" Content="Exit focus mode" Style="{StaticResource AccentButtonStyle}" Visibility="Collapsed"
-                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24" Padding="18,10" Click="ExitFocus_Click" />
-                <!-- Saving indicator -->
-                <StackPanel x:Name="SyncBadge" Orientation="Horizontal" Spacing="8" Opacity="0"
-                            HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,22,0">
-                    <ProgressRing IsActive="True" Width="14" Height="14" />
+        <!-- Sidebar (built in code) -->
+        <Border x:Name="Sidebar" Margin="12,0,0,12" CornerRadius="18" Padding="10,12,10,12" BorderThickness="1"
+                Background="{ThemeResource SidebarBrush}" BorderBrush="{ThemeResource LineBrush}" Width="236" />
+
+        <Grid Grid.Column="1">
+            <Frame x:Name="PageFrame" />
+            <!-- Pops up when a checklist is finished -->
+            <InfoBar x:Name="Toast" IsOpen="False" Severity="Success" IsClosable="True" CornerRadius="14"
+                     HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24" MaxWidth="460" />
+            <Button x:Name="ExitFocus" Content="Exit focus mode" Style="{StaticResource AccentButtonStyle}" Visibility="Collapsed"
+                    HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24" Padding="18,10" CornerRadius="10" Click="ExitFocus_Click" />
+            <!-- Saving indicator -->
+            <Border x:Name="SyncBadge" Opacity="0" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,10,22,0"
+                    Padding="10,5,12,6" CornerRadius="99" Background="{ThemeResource PanelBrush}" BorderBrush="{ThemeResource LineBrush}" BorderThickness="1">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <ProgressRing IsActive="True" Width="12" Height="12" />
                     <TextBlock Text="Saving" FontSize="12" Style="{StaticResource Muted}" />
                 </StackPanel>
-            </Grid>
-        </NavigationView>
+            </Border>
+        </Grid>
     </Grid>
 </Page>

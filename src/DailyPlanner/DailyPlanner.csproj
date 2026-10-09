@@ -34,5 +34,6 @@
     <Content Include="Assets\**\*.png" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\AppIcon.ico" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Assets\data.json" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Assets\Fonts\*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

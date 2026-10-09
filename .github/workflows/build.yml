@@ -116,6 +116,19 @@ jobs:
             Stop-Process -Id $p.Id; Start-Sleep -Seconds 2
           }
 
+          # Dark theme screenshots
+          $dark = $state | ConvertFrom-Json
+          $dark | Add-Member -NotePropertyName md -NotePropertyValue "dark" -Force
+          Set-Content -Path "$env:LOCALAPPDATA\DailyPlanner\planner.json" -Value ($dark | ConvertTo-Json -Depth 5)
+          foreach ($pg in @("home","gaming","coding","settings")) {
+            $p = Start-Process -FilePath publish\DailyPlanner.exe -ArgumentList "--page $pg" -PassThru
+            Start-Sleep -Seconds 12
+            $g.CopyFromScreen($b.Location, [System.Drawing.Point]::Empty, $b.Size)
+            $bmp.Save("smoke\$pg-dark.png")
+            if ($p.HasExited) { Write-Host "::error::The $pg page (dark) closed by itself"; exit 1 }
+            Stop-Process -Id $p.Id; Start-Sleep -Seconds 2
+          }
+
       - uses: actions/upload-artifact@v4
         with:
           name: DailyPlanner-windows

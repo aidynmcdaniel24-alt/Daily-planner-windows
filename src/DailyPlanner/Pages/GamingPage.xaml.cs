@@ -15,8 +15,8 @@ public sealed partial class GamingPage : Page
     readonly UI.Layout L = new();
     JsonObject G = new();
     // timer
-    readonly ProgressRing ring = new() { IsIndeterminate = false, Width = 170, Height = 170, Maximum = 100 };
-    readonly TextBlock timeText = new() { FontSize = 38, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontFamily = new FontFamily("Cascadia Mono, Consolas") };
+    readonly ProgressRing ring = UI.Ring(170, UI.Lane("gaming"));
+    readonly TextBlock timeText = new() { FontSize = 38, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, FontFamily = UI.Mono };
     readonly StackPanel presets = new() { Orientation = Orientation.Horizontal, Spacing = 6, HorizontalAlignment = HorizontalAlignment.Center };
     Button? startBtn;
     // tilt

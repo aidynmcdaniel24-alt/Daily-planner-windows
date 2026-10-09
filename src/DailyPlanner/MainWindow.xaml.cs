@@ -20,7 +20,7 @@ public sealed partial class MainWindow : Window
         WindowPlace.Restore(AppWindow);
         Closed += (s, e) => WindowPlace.Save(AppWindow);
         if (AppWindow.Presenter is OverlappedPresenter p) { p.PreferredMinimumWidth = 420; p.PreferredMinimumHeight = 560; }
-        Theme.Apply(RootGrid);
+        Theme.Apply(RootGrid, AppWindow);
     }
 
     // Decide where to start: the planner if signed in (or a guest), otherwise the login page

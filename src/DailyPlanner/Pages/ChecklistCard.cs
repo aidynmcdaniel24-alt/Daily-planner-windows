@@ -13,8 +13,8 @@ public sealed class ChecklistCard : UserControl
     readonly string lane;
     readonly StackPanel rows = new();
     readonly StackPanel editor = new() { Spacing = 8, Visibility = Visibility.Collapsed };
-    readonly ProgressBar bar = new() { Maximum = 100, Height = 6, CornerRadius = new CornerRadius(3) };
-    readonly TextBlock count = UI.T("", 12, true);
+    readonly UI.Meter bar;
+    readonly TextBlock count = UI.T("", 12, true, UI.Muted);
     readonly Border streak = UI.Pill("");
     readonly Button editBtn;
     string sig = "";
@@ -30,7 +30,7 @@ public sealed class ChecklistCard : UserControl
     public ChecklistCard(string lane, string? sub = null)
     {
         this.lane = lane;
-        bar.Foreground = UI.Lane(lane);
+        bar = new UI.Meter(UI.Lane(lane));
         rows.ChildrenTransitions = new TransitionCollection { new EntranceThemeTransition { IsStaggeringEnabled = true } };
         editBtn = UI.Btn("Edit tasks", ToggleEdit, false, "");
         editBtn.HorizontalAlignment = HorizontalAlignment.Stretch;
@@ -78,6 +78,7 @@ public sealed class ChecklistCard : UserControl
         g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         g.ColumnDefinitions.Add(new ColumnDefinition());
         var cb = new CheckBox { IsChecked = t.Done, VerticalAlignment = VerticalAlignment.Top, MinWidth = 0 };
+        LaneColors(cb, lane);
         var text = new StackPanel { Margin = new Thickness(0, 5, 0, 0), Spacing = 1 };
 
         // "Aim training, 15 min" → title + a small time pill
@@ -103,6 +104,21 @@ public sealed class ChecklistCard : UserControl
             cb.IsChecked = !(cb.IsChecked ?? false);
         };
         return g;
+    }
+
+    // Checkboxes in the lane's color (blue, orange or green) instead of the default
+    internal static void LaneColors(CheckBox cb, string lane)
+    {
+        var c = UI.Lane(lane); var r = cb.Resources;
+        foreach (var st in new[] { "Checked", "CheckedPointerOver", "CheckedPressed" })
+        {
+            r["CheckBoxCheckBackgroundFill" + st] = c;
+            r["CheckBoxCheckBackgroundStroke" + st] = c;
+            r["CheckBoxCheckGlyphForeground" + st] = new SolidColorBrush(Microsoft.UI.Colors.White);
+        }
+        r["CheckBoxCheckBackgroundStrokeUnchecked"] = UI.Res("Line2Brush");
+        r["CheckBoxCheckBackgroundStrokeUncheckedPointerOver"] = c;
+        r["CheckBoxCheckBackgroundFillUncheckedPointerOver"] = UI.Tint(c, 0.12);
     }
 
     static bool Inside(DependencyObject? el, DependencyObject parent)

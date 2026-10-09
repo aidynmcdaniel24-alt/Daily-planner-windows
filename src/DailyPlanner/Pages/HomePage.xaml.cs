@@ -21,12 +21,12 @@ public sealed partial class HomePage : Page
     readonly InfoBar nudgeBar = Bar("", "", InfoBarSeverity.Success);
     readonly InfoBar bedBar = Bar("", "", InfoBarSeverity.Informational);
     readonly Grid top = new() { ColumnSpacing = 18, RowSpacing = 18 };
-    readonly Border nextCard = new() { CornerRadius = new CornerRadius(14), Padding = new Thickness(22), BorderThickness = new Thickness(1) };
-    readonly TextBlock nextLabel = UI.Eyebrow("Next up"), nextTitle = UI.T("", 20, true), nextNote = UI.M("");
+    readonly Border nextCard = new() { CornerRadius = new CornerRadius(18), Padding = new Thickness(22), BorderThickness = new Thickness(1) };
+    readonly TextBlock nextLabel = UI.Eyebrow("Next up"), nextTitle = UI.T("", 22, true), nextNote = UI.M("");
     readonly Button nextDone;
     readonly Border todayCard;
-    readonly ProgressRing allRing = new() { IsIndeterminate = false, Width = 116, Height = 116, Maximum = 100 };
-    readonly TextBlock allPct = new() { FontSize = 26, FontWeight = FontWeights.SemiBold, HorizontalAlignment = HorizontalAlignment.Center };
+    readonly ProgressRing allRing = UI.Ring(116, UI.Brand);
+    readonly TextBlock allPct = new() { FontSize = 28, FontWeight = FontWeights.Bold, CharacterSpacing = -20, HorizontalAlignment = HorizontalAlignment.Center };
     readonly StackPanel lanes = new() { Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
     readonly TextBlock quote = UI.T("", 18), quoteBy = UI.M("");
     readonly StackPanel typeRow = new() { Orientation = Orientation.Horizontal, Spacing = 4 }, moodRow = new() { Orientation = Orientation.Horizontal, Spacing = 6 };
@@ -40,6 +40,7 @@ public sealed partial class HomePage : Page
     public HomePage()
     {
         InitializeComponent();
+        hello.FontWeight = FontWeights.Bold; hello.CharacterSpacing = -25;
         root.ChildrenTransitions = new Microsoft.UI.Xaml.Media.Animation.TransitionCollection { new Microsoft.UI.Xaml.Media.Animation.EntranceThemeTransition { IsStaggeringEnabled = true } };
         foreach (var b in new[] { setupBar, verifyBar, nudgeBar, bedBar }) b.Closed += (s, e) => { s.Visibility = Visibility.Collapsed; s.Tag = "closed"; };
         setupBar.ActionButton = UI.Btn("Open setup", () => { setupBar.Tag = "seen"; Process.Start(new ProcessStartInfo(Config.Website + "setup/") { UseShellExecute = true }); });
@@ -76,7 +77,7 @@ public sealed partial class HomePage : Page
         var tg = new Grid { ColumnSpacing = 20 };
         tg.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto }); tg.ColumnDefinitions.Add(new ColumnDefinition());
         tg.Children.Add(ringGrid); Grid.SetColumn(lanes, 1); tg.Children.Add(lanes);
-        todayCard = new Border { Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(14), Padding = new Thickness(20), Child = tg };
+        todayCard = new Border { Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Padding = new Thickness(20), Child = tg };
 
         top.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1.2, GridUnitType.Star) });
         top.ColumnDefinitions.Add(new ColumnDefinition());
@@ -87,13 +88,13 @@ public sealed partial class HomePage : Page
         // Quote card
         foreach (var (k, label) in new[] { ("mix", "Mix"), ("moti", "Motivation"), ("faith", "Faith") })
         {
-            var b = new ToggleButton { Content = label, Tag = k, Padding = new Thickness(12, 4, 12, 5) };
+            var b = UI.Chip(label, false); b.Tag = k; b.HorizontalAlignment = HorizontalAlignment.Left; b.Padding = new Thickness(12, 4, 12, 5);
             b.Click += (s, e) => { Store.St["qm"] = k; Store.Save(); };
             typeRow.Children.Add(b);
         }
         foreach (var (k, label) in new[] { ("any", "Any"), ("focus", "Focus"), ("loss", "After a loss"), ("tired", "Tired") })
         {
-            var b = new ToggleButton { Content = label, Tag = k, CornerRadius = new CornerRadius(99), Padding = new Thickness(12, 3, 12, 4) };
+            var b = UI.Chip(label, false); b.Tag = k; b.HorizontalAlignment = HorizontalAlignment.Left; b.CornerRadius = new CornerRadius(99); b.Padding = new Thickness(12, 3, 12, 4);
             b.Click += (s, e) => { Store.St["qmo"] = k; shift = 0; Store.Save(); };
             moodRow.Children.Add(b);
         }
@@ -102,7 +103,7 @@ public sealed partial class HomePage : Page
         var moodLine = UI.Row(10, UI.M("Mood"), moodRow); ((TextBlock)moodLine.Children[0]).VerticalAlignment = VerticalAlignment.Center;
         root.Children.Add(new Border
         {
-            Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(14), Padding = new Thickness(20),
+            Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Padding = new Thickness(20),
             Child = UI.Stack(10, qhead, quote, quoteBy, new ScrollViewer { Content = moodLine, HorizontalScrollBarVisibility = ScrollBarVisibility.Auto, VerticalScrollBarVisibility = ScrollBarVisibility.Disabled, HorizontalScrollMode = ScrollMode.Auto, VerticalScrollMode = ScrollMode.Disabled }),
         });
 
@@ -220,7 +221,7 @@ public sealed partial class HomePage : Page
         var color = UI.Lane(lane); int streak = Store.Streak(lane);
         string[] icons = { "", "", "" };
         var ring = new Grid { Width = 38, Height = 38 };
-        ring.Children.Add(new ProgressRing { IsIndeterminate = false, Width = 38, Height = 38, Maximum = 100, Value = n == 0 ? 0 : 100.0 * k / n, Foreground = color });
+        ring.Children.Add(new ProgressRing { IsIndeterminate = false, Width = 38, Height = 38, Maximum = 100, Value = n == 0 ? 0 : 100.0 * k / n, Foreground = color, Background = UI.Res("Line2Brush") });
         ring.Children.Add(new FontIcon { Glyph = icons[Array.IndexOf(Store.Lanes, lane)], FontSize = 15, Foreground = color, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center });
         var text = UI.Stack(0, UI.T(Store.LaneNames[lane], 14, true), UI.T(n > 0 && k == n ? "All done" : $"{k}/{n} done", 12, false, n > 0 && k == n ? UI.Res("CodingBrush") : UI.Muted));
         text.VerticalAlignment = VerticalAlignment.Center;

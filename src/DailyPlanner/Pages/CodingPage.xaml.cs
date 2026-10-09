@@ -21,8 +21,8 @@ public sealed partial class CodingPage : Page
     readonly TextBlock tipText = UI.T("", 16);
     readonly StackPanel siteList = new(), moreSites = new();
     // focus session
-    readonly ProgressRing ring = new() { IsIndeterminate = false, Width = 170, Height = 170, Maximum = 100 };
-    readonly TextBlock timeText = new() { FontSize = 36, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontFamily = new Microsoft.UI.Xaml.Media.FontFamily("Cascadia Mono, Consolas"), HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
+    readonly ProgressRing ring = UI.Ring(170, UI.Lane("coding"));
+    readonly TextBlock timeText = new() { FontSize = 36, FontWeight = Microsoft.UI.Text.FontWeights.SemiBold, FontFamily = UI.Mono, HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center };
     readonly StackPanel presets = new() { Orientation = Orientation.Horizontal, Spacing = 8, HorizontalAlignment = HorizontalAlignment.Center };
     readonly StackPanel chart = new();
     readonly TextBlock todayMins = UI.M("");

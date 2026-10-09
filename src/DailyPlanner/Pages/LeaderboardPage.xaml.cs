@@ -16,7 +16,7 @@ public sealed partial class LeaderboardPage : Page
     readonly StackPanel body = new() { Spacing = 16 };
     readonly StackPanel list = new();
     readonly TextBox nameBox = new() { Header = "Name shown to friends", MaxLength = 24 };
-    readonly TextBox codeBox = new() { PlaceholderText = "ABC123", MaxLength = 6, CharacterCasing = CharacterCasing.Upper, FontFamily = new FontFamily("Cascadia Mono, Consolas") };
+    readonly TextBox codeBox = new() { PlaceholderText = "ABC123", MaxLength = 6, CharacterCasing = CharacterCasing.Upper, FontFamily = UI.Mono };
     readonly InfoBar msg = new() { IsOpen = false, IsClosable = true };
     readonly Border count = UI.Pill("");
     DispatcherTimer? nameTimer;
@@ -56,7 +56,7 @@ public sealed partial class LeaderboardPage : Page
         var t = UI.T(title, 20, true); t.HorizontalAlignment = HorizontalAlignment.Center; s.Children.Add(t);
         var m = UI.M(text, 14); m.TextAlignment = TextAlignment.Center; m.MaxWidth = 360; s.Children.Add(m);
         if (action != null) { action.HorizontalAlignment = HorizontalAlignment.Center; s.Children.Add(action); }
-        return new Border { Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(14), Padding = new Thickness(20), Child = s };
+        return new Border { Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Padding = new Thickness(20), Child = s };
     }
 
     async Task Draw()
@@ -93,7 +93,7 @@ public sealed partial class LeaderboardPage : Page
 
         // Friend code
         string code = Board.Lb["code"]?.ToString() ?? "";
-        var codeText = new TextBlock { Text = code, FontSize = 28, FontWeight = FontWeights.SemiBold, CharacterSpacing = 300, FontFamily = new FontFamily("Cascadia Mono, Consolas"), VerticalAlignment = VerticalAlignment.Center };
+        var codeText = new TextBlock { Text = code, FontSize = 28, FontWeight = FontWeights.SemiBold, CharacterSpacing = 300, FontFamily = UI.Mono, VerticalAlignment = VerticalAlignment.Center };
         Button copy = null!;
         copy = UI.Btn("Copy", () =>
         {

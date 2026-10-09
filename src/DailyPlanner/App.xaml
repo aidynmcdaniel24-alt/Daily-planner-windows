@@ -8,6 +8,142 @@
                 <XamlControlsResources xmlns="using:Microsoft.UI.Xaml.Controls" />
             </ResourceDictionary.MergedDictionaries>
 
+            <!-- ===== Colors: the same palette as the website (dark navy + purple) ===== -->
+            <ResourceDictionary.ThemeDictionaries>
+                <ResourceDictionary x:Key="Dark">
+                    <Color x:Key="BgColor">#0A0C12</Color>
+                    <Color x:Key="PanelColor">#12151E</Color>
+                    <Color x:Key="SunkColor">#0D1017</Color>
+                    <Color x:Key="LineColor">#1E2230</Color>
+                    <Color x:Key="Line2Color">#2A2F40</Color>
+                    <Color x:Key="TextColor">#E8EAF1</Color>
+                    <Color x:Key="MuteColor">#8A90A4</Color>
+                    <Color x:Key="GlowColor">#2A6D5CFF</Color>
+
+                    <SolidColorBrush x:Key="BgBrush" Color="#0A0C12" />
+                    <SolidColorBrush x:Key="PanelBrush" Color="#12151E" />
+                    <SolidColorBrush x:Key="SunkBrush" Color="#0D1017" />
+                    <SolidColorBrush x:Key="LineBrush" Color="#1E2230" />
+                    <SolidColorBrush x:Key="Line2Brush" Color="#2A2F40" />
+                    <SolidColorBrush x:Key="HoverBrush" Color="#181C28" />
+                    <SolidColorBrush x:Key="NavActiveBrush" Color="#1A1D2B" />
+                    <SolidColorBrush x:Key="SidebarBrush" Color="#0D0F17" />
+                    <SolidColorBrush x:Key="AccentTextBrush" Color="#9A8EFF" />
+                    <SolidColorBrush x:Key="OkBrush" Color="#34D399" />
+                    <SolidColorBrush x:Key="HotBrush" Color="#FFA94D" />
+
+                    <!-- WinUI's own colors, swapped for ours -->
+                    <SolidColorBrush x:Key="ApplicationPageBackgroundThemeBrush" Color="#0A0C12" />
+                    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#0A0C12" />
+                    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#12151E" />
+                    <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="#0F121A" />
+                    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#1E2230" />
+                    <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#1E2230" />
+                    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#E8EAF1" />
+                    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#8A90A4" />
+                    <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#6B7186" />
+                    <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#1A1E2A" />
+                    <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="#151926" />
+                    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#161924" />
+                    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="#1C2030" />
+                    <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="#131620" />
+                    <SolidColorBrush x:Key="ControlFillColorInputActiveBrush" Color="#0D1017" />
+                    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#2A2F40" />
+                    <SolidColorBrush x:Key="ControlStrokeColorSecondaryBrush" Color="#2A2F40" />
+                    <SolidColorBrush x:Key="ControlElevationBorderBrush" Color="#2A2F40" />
+                    <SolidColorBrush x:Key="CircleElevationBorderBrush" Color="#2A2F40" />
+                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#2A2F40" />
+                    <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#6D5CFF" />
+                    <SolidColorBrush x:Key="AccentControlElevationBorderBrush" Color="#6D5CFF" />
+                    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#6D5CFF" />
+                    <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#7F70FF" />
+                    <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#5B4AE6" />
+                    <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#9A8EFF" />
+                    <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#B3A9FF" />
+                    <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#8B7DFF" />
+                    <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#E6E2FF" />
+                    <SolidColorBrush x:Key="AcrylicInAppFillColorDefaultBrush" Color="#141721" />
+                    <SolidColorBrush x:Key="AcrylicBackgroundFillColorDefaultBrush" Color="#141721" />
+                    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#141721" />
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#141721" />
+                    <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#141721" />
+                    <SolidColorBrush x:Key="ContentDialogBackground" Color="#12151E" />
+                    <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="#12151E" />
+                    <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#2A2F40" />
+                    <SolidColorBrush x:Key="ExpanderHeaderBackground" Color="#0F121A" />
+                    <SolidColorBrush x:Key="ExpanderContentBackground" Color="#0F121A" />
+                    <SolidColorBrush x:Key="ExpanderHeaderBorderBrush" Color="#1E2230" />
+                    <SolidColorBrush x:Key="ExpanderContentBorderBrush" Color="#1E2230" />
+                </ResourceDictionary>
+
+                <ResourceDictionary x:Key="Light">
+                    <Color x:Key="BgColor">#F5F6FA</Color>
+                    <Color x:Key="PanelColor">#FFFFFF</Color>
+                    <Color x:Key="SunkColor">#EEF0F5</Color>
+                    <Color x:Key="LineColor">#E4E6EE</Color>
+                    <Color x:Key="Line2Color">#D3D6E0</Color>
+                    <Color x:Key="TextColor">#11131A</Color>
+                    <Color x:Key="MuteColor">#646A7D</Color>
+                    <Color x:Key="GlowColor">#1F6D5CFF</Color>
+
+                    <SolidColorBrush x:Key="BgBrush" Color="#F5F6FA" />
+                    <SolidColorBrush x:Key="PanelBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="SunkBrush" Color="#EEF0F5" />
+                    <SolidColorBrush x:Key="LineBrush" Color="#E4E6EE" />
+                    <SolidColorBrush x:Key="Line2Brush" Color="#D3D6E0" />
+                    <SolidColorBrush x:Key="HoverBrush" Color="#EDEEF4" />
+                    <SolidColorBrush x:Key="NavActiveBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="SidebarBrush" Color="#EFF0F6" />
+                    <SolidColorBrush x:Key="AccentTextBrush" Color="#5B4AE6" />
+                    <SolidColorBrush x:Key="OkBrush" Color="#0F9D72" />
+                    <SolidColorBrush x:Key="HotBrush" Color="#D9480F" />
+
+                    <SolidColorBrush x:Key="ApplicationPageBackgroundThemeBrush" Color="#F5F6FA" />
+                    <SolidColorBrush x:Key="SolidBackgroundFillColorBaseBrush" Color="#F5F6FA" />
+                    <SolidColorBrush x:Key="CardBackgroundFillColorDefaultBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="CardBackgroundFillColorSecondaryBrush" Color="#FAFAFC" />
+                    <SolidColorBrush x:Key="CardStrokeColorDefaultBrush" Color="#E4E6EE" />
+                    <SolidColorBrush x:Key="DividerStrokeColorDefaultBrush" Color="#E4E6EE" />
+                    <SolidColorBrush x:Key="TextFillColorPrimaryBrush" Color="#11131A" />
+                    <SolidColorBrush x:Key="TextFillColorSecondaryBrush" Color="#646A7D" />
+                    <SolidColorBrush x:Key="TextFillColorTertiaryBrush" Color="#8A90A4" />
+                    <SolidColorBrush x:Key="SubtleFillColorSecondaryBrush" Color="#EEF0F5" />
+                    <SolidColorBrush x:Key="SubtleFillColorTertiaryBrush" Color="#F3F4F8" />
+                    <SolidColorBrush x:Key="ControlFillColorDefaultBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ControlFillColorSecondaryBrush" Color="#F4F5F9" />
+                    <SolidColorBrush x:Key="ControlFillColorTertiaryBrush" Color="#EEF0F5" />
+                    <SolidColorBrush x:Key="ControlFillColorInputActiveBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ControlStrokeColorDefaultBrush" Color="#D3D6E0" />
+                    <SolidColorBrush x:Key="ControlStrokeColorSecondaryBrush" Color="#D3D6E0" />
+                    <SolidColorBrush x:Key="ControlElevationBorderBrush" Color="#D3D6E0" />
+                    <SolidColorBrush x:Key="CircleElevationBorderBrush" Color="#D3D6E0" />
+                    <SolidColorBrush x:Key="TextControlElevationBorderBrush" Color="#D3D6E0" />
+                    <SolidColorBrush x:Key="TextControlElevationBorderFocusedBrush" Color="#6D5CFF" />
+                    <SolidColorBrush x:Key="AccentControlElevationBorderBrush" Color="#6D5CFF" />
+                    <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#6D5CFF" />
+                    <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#7F70FF" />
+                    <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#5B4AE6" />
+                    <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#5B4AE6" />
+                    <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#4A3BC4" />
+                    <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#6D5CFF" />
+                    <SolidColorBrush x:Key="TextOnAccentFillColorPrimaryBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="TextOnAccentFillColorSecondaryBrush" Color="#F0EEFF" />
+                    <SolidColorBrush x:Key="AcrylicInAppFillColorDefaultBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="AcrylicBackgroundFillColorDefaultBrush" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ComboBoxDropDownBackground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="MenuFlyoutPresenterBackground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="FlyoutPresenterBackground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ContentDialogBackground" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ContentDialogTopOverlay" Color="#FFFFFF" />
+                    <SolidColorBrush x:Key="ContentDialogBorderBrush" Color="#E4E6EE" />
+                    <SolidColorBrush x:Key="ExpanderHeaderBackground" Color="#FAFAFC" />
+                    <SolidColorBrush x:Key="ExpanderContentBackground" Color="#FAFAFC" />
+                    <SolidColorBrush x:Key="ExpanderHeaderBorderBrush" Color="#E4E6EE" />
+                    <SolidColorBrush x:Key="ExpanderContentBorderBrush" Color="#E4E6EE" />
+                </ResourceDictionary>
+            </ResourceDictionary.ThemeDictionaries>
+
             <!-- Brand purple (same as the website) -->
             <Color x:Key="SystemAccentColor">#6D5CFF</Color>
             <Color x:Key="SystemAccentColorLight1">#7F70FF</Color>
@@ -24,21 +160,37 @@
             <SolidColorBrush x:Key="BrandBrush" Color="#6D5CFF" />
             <SolidColorBrush x:Key="StreakBrush" Color="#F08C2E" />
 
+            <!-- The website's font (Geist, free under the SIL Open Font License) -->
+            <FontFamily x:Key="GeistFont">ms-appx:///Assets/Fonts/Geist-Variable.ttf#Geist</FontFamily>
+            <FontFamily x:Key="GeistMono">ms-appx:///Assets/Fonts/GeistMono-Variable.ttf#Geist Mono</FontFamily>
+            <FontFamily x:Key="ContentControlThemeFontFamily">ms-appx:///Assets/Fonts/Geist-Variable.ttf#Geist</FontFamily>
+
+            <!-- Softer, rounder controls -->
+            <CornerRadius x:Key="ControlCornerRadius">8</CornerRadius>
+            <CornerRadius x:Key="OverlayCornerRadius">14</CornerRadius>
+            <Thickness x:Key="ButtonPadding">14,8,14,9</Thickness>
+
+            <Style TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource GeistFont}" />
+            </Style>
+
             <!-- Rounded card look used on every page -->
             <Style x:Key="Card" TargetType="Border">
                 <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />
                 <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />
                 <Setter Property="BorderThickness" Value="1" />
-                <Setter Property="CornerRadius" Value="12" />
-                <Setter Property="Padding" Value="20" />
+                <Setter Property="CornerRadius" Value="18" />
+                <Setter Property="Padding" Value="22" />
             </Style>
             <Style x:Key="Eyebrow" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource GeistMono}" />
                 <Setter Property="FontSize" Value="12" />
                 <Setter Property="FontWeight" Value="SemiBold" />
-                <Setter Property="CharacterSpacing" Value="80" />
-                <Setter Property="Foreground" Value="{StaticResource BrandBrush}" />
+                <Setter Property="CharacterSpacing" Value="100" />
+                <Setter Property="Foreground" Value="{ThemeResource AccentTextBrush}" />
             </Style>
             <Style x:Key="Muted" TargetType="TextBlock">
+                <Setter Property="FontFamily" Value="{StaticResource GeistFont}" />
                 <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />
                 <Setter Property="TextWrapping" Value="Wrap" />
             </Style>

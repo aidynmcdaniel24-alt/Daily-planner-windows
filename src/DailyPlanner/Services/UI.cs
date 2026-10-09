@@ -11,7 +11,13 @@ namespace DailyPlanner.Services;
 // ===== Small building blocks so every page looks the same =====
 public static class UI
 {
-    public static Brush Res(string key) => (Brush)Application.Current.Resources[key];
+    // Looks up a color for the theme the app is showing (light or dark)
+    public static Brush Res(string key)
+    {
+        var all = Application.Current.Resources;
+        if (all.ThemeDictionaries.TryGetValue(Theme.Current, out var d) && d is ResourceDictionary rd && rd.TryGetValue(key, out var v) && v is Brush b) return b;
+        return (Brush)all[key];
+    }
     public static Brush Lane(string lane) => Res(char.ToUpper(lane[0]) + lane[1..] + "Brush");
     public static Brush Muted => Res("TextFillColorSecondaryBrush");
     public static Brush Brand => Res("BrandBrush");
@@ -27,9 +33,11 @@ public static class UI
     }
     public static TextBlock M(string text, double size = 13) => T(text, size, false, Muted);
 
+    public static FontFamily Mono => (FontFamily)Application.Current.Resources["GeistMono"];
+
     public static TextBlock Eyebrow(string text) => new()
     {
-        Text = text.ToUpperInvariant(), FontSize = 12, FontWeight = FontWeights.SemiBold, CharacterSpacing = 80, Foreground = Brand,
+        Text = text.ToUpperInvariant(), FontSize = 12, FontWeight = FontWeights.SemiBold, CharacterSpacing = 100, Foreground = Res("AccentTextBrush"), FontFamily = Mono,
     };
 
     public static StackPanel Stack(double spacing = 12, params UIElement[] kids)
@@ -54,7 +62,7 @@ public static class UI
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         head.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         var c = color ?? Brand;
-        var icon = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(10), Background = Tint(c, 0.15), VerticalAlignment = VerticalAlignment.Top,
+        var icon = new Border { Width = 36, Height = 36, CornerRadius = new CornerRadius(11), Background = Tint(c, 0.14), BorderBrush = Tint(c, 0.22), BorderThickness = new Thickness(1), VerticalAlignment = VerticalAlignment.Top,
             Child = new FontIcon { Glyph = glyph, FontSize = 16, Foreground = c } };
         head.Children.Add(icon);
         var titles = Stack(1, T(title, 16, true));
@@ -63,14 +71,44 @@ public static class UI
         Grid.SetColumn(titles, 1); head.Children.Add(titles);
         if (right != null) { right.VerticalAlignment = VerticalAlignment.Top; Grid.SetColumn(right, 2); head.Children.Add(right); }
 
-        var inner = Stack(12, head);
+        var inner = Stack(14, head);
         foreach (var b in body) inner.Children.Add(b);
-        return new Border
+        return Surface(inner);
+    }
+
+    // The card box itself: rounded, thin border that brightens a little on hover
+    public static Border Surface(UIElement child, double padding = 22)
+    {
+        var card = new Border
         {
             Background = Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = Res("CardStrokeColorDefaultBrush"),
-            BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(14), Padding = new Thickness(20), Child = inner,
+            BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(18), Padding = new Thickness(padding), Child = child,
         };
+        card.PointerEntered += (s, e) => card.BorderBrush = Res("Line2Brush");
+        card.PointerExited += (s, e) => card.BorderBrush = Res("CardStrokeColorDefaultBrush");
+        return card;
     }
+
+    // A thin rounded progress bar (Value is 0 to 100)
+    public sealed class Meter : Grid
+    {
+        readonly Border fill;
+        double v;
+        public Meter(Brush color, double height = 6)
+        {
+            Height = height; CornerRadius = new CornerRadius(height / 2); Background = Res("Line2Brush");
+            fill = new Border { HorizontalAlignment = HorizontalAlignment.Left, CornerRadius = new CornerRadius(height / 2), Background = color, Width = 0 };
+            Children.Add(fill);
+            SizeChanged += (s, e) => Draw();
+        }
+        public double Value { get => v; set { v = Math.Clamp(value, 0, 100); Draw(); } }
+        public Brush Color { set => fill.Background = value; }
+        void Draw() => fill.Width = Math.Max(0, ActualWidth * v / 100);
+    }
+
+    // Progress ring with a faint track behind it
+    public static ProgressRing Ring(double size, Brush color) =>
+        new() { IsIndeterminate = false, Width = size, Height = size, Maximum = 100, Foreground = color, Background = Res("Line2Brush") };
 
     public static Border Pill(string text, Brush? fg = null, Brush? bg = null) => new()
     {
@@ -83,7 +121,7 @@ public static class UI
     {
         object content = text;
         if (glyph != null) content = Row(8, new FontIcon { Glyph = glyph, FontSize = 14 }, new TextBlock { Text = text });
-        var b = new Button { Content = content, Padding = new Thickness(14, 7, 14, 8) };
+        var b = new Button { Content = content, Padding = new Thickness(16, 8, 16, 9), CornerRadius = new CornerRadius(10) };
         if (accent) b.Style = (Style)Application.Current.Resources["AccentButtonStyle"];
         b.Click += (s, e) => click();
         return b;
@@ -197,8 +235,9 @@ public static class UI
     // A page title like the website's: small colored label, big title, gray line
     public static StackPanel PageTitle(string eyebrow, string title, string? sub = null)
     {
-        var s = Stack(4, Eyebrow(eyebrow), T(title, 32, true));
-        if (sub != null) s.Children.Add(M(sub, 14));
+        var t = T(title, 34, true); t.FontWeight = FontWeights.Bold; t.CharacterSpacing = -25;
+        var s = Stack(6, Eyebrow(eyebrow), t);
+        if (sub != null) s.Children.Add(M(sub, 15));
         return s;
     }
 
@@ -249,12 +288,12 @@ public static class UI
     }
 
     // A stat tile like the website's (label, big number, small note)
-    public static Border Tile(string label, string value, string sub) => new()
+    public static Border Tile(string label, string value, string sub)
     {
-        Background = Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1),
-        CornerRadius = new CornerRadius(14), Padding = new Thickness(16),
-        Child = Stack(2, T(label.ToUpperInvariant(), 11, true, Muted), T(value, 26, true), M(sub, 12)),
-    };
+        var l = T(label.ToUpperInvariant(), 11, true, Muted); l.FontFamily = Mono; l.CharacterSpacing = 80;
+        var v = T(value, 28, true); v.FontWeight = FontWeights.Bold; v.CharacterSpacing = -20;
+        return Surface(Stack(3, l, v, M(sub, 12)), 18);
+    }
 
     public static string Plural(int n, string one, string many) => n + " " + (n == 1 ? one : many);
 }

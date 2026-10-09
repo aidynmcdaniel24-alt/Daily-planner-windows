@@ -87,12 +87,7 @@ public sealed partial class SummaryPage : Page
         };
         var boxes = new List<FrameworkElement>();
         foreach (var t in T)
-            boxes.Add(new Border
-            {
-                Background = UI.Res("CardBackgroundFillColorDefaultBrush"), BorderBrush = UI.Res("CardStrokeColorDefaultBrush"), BorderThickness = new Thickness(1),
-                CornerRadius = new CornerRadius(14), Padding = new Thickness(16),
-                Child = UI.Stack(2, UI.T(t.Item1, 11, true, UI.Muted), UI.T(t.Item2, 26, true), UI.M(t.Item3, 12)),
-            });
+            boxes.Add(UI.Tile(t.Item1, t.Item2, t.Item3));
         tiles.Content = UI.Wrap(boxes, 150);
     }
 
@@ -169,7 +164,7 @@ public sealed partial class SummaryPage : Page
             var head = new Grid();
             head.Children.Add(UI.T((fin ? "✓ " : "") + c.Text, 14, fin, fin ? UI.Res("CodingBrush") : null));
             var cnt = UI.T($"{v}/{c.Goal}", 13, true, UI.Muted); cnt.HorizontalAlignment = HorizontalAlignment.Right; head.Children.Add(cnt);
-            challenges.Children.Add(UI.Stack(6, head, new ProgressBar { Maximum = c.Goal, Value = v, Height = 6, CornerRadius = new CornerRadius(3) }));
+            challenges.Children.Add(UI.Stack(6, head, new UI.Meter(UI.Brand) { Value = c.Goal == 0 ? 0 : 100.0 * v / c.Goal }));
         }
         chSub.Text = L2.Count > 0 ? $"{done} of {L2.Count} done. New challenges every Monday." : "No challenges this week.";
     }
