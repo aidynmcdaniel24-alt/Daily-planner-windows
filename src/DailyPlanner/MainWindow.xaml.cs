@@ -46,20 +46,7 @@ public sealed partial class MainWindow : Window
     // so copy the app's light/dark colors onto the window's root too.
     void UseOurColors()
     {
-        try
-        {
-            var app = Application.Current.Resources.ThemeDictionaries;
-            var rd = new ResourceDictionary();
-            foreach (var t in new[] { "Dark", "Light" })
-            {
-                if (!app.TryGetValue(t, out var src) || src is not ResourceDictionary from) continue;
-                var copy = new ResourceDictionary();
-                foreach (var kv in from) copy[kv.Key] = kv.Value;
-                rd.ThemeDictionaries[t] = copy;
-            }
-            Theme.Palette = rd;
-            RootGrid.Resources.MergedDictionaries.Add(rd);
-        }
+        try { RootGrid.Resources.MergedDictionaries.Add(Theme.NewPalette()); }
         catch (Exception ex) { App.Log("Colors: " + ex.Message); }
     }
 }

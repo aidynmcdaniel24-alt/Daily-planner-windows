@@ -9,14 +9,28 @@ public static class Theme
     public static string Mode => Store.St["md"]?.ToString() ?? "auto";
     public static event Action? Changed;
     public static ApplicationTheme System { get; set; } = ApplicationTheme.Dark;   // what Windows is set to
-    public static ResourceDictionary? Palette;                                         // our colors, for pop-ups
+
+    // A fresh copy of our light and dark colors (WinUI's built-in controls only use them when set close by)
+    public static ResourceDictionary NewPalette()
+    {
+        var app = Application.Current.Resources.ThemeDictionaries;
+        var rd = new ResourceDictionary();
+        foreach (var t in new[] { "Dark", "Light" })
+        {
+            if (!app.TryGetValue(t, out var src) || src is not ResourceDictionary from) continue;
+            var copy = new ResourceDictionary();
+            foreach (var kv in from) copy[kv.Key] = kv.Value;
+            rd.ThemeDictionaries[t] = copy;
+        }
+        return rd;
+    }
 
     // Dialogs open outside the window's layout, so give them our colors and theme too
     public static Microsoft.UI.Xaml.Controls.ContentDialog Themed(this Microsoft.UI.Xaml.Controls.ContentDialog d) => Dress(d);
     public static T Dress<T>(T el) where T : FrameworkElement
     {
         el.RequestedTheme = IsDark ? ElementTheme.Dark : ElementTheme.Light;
-        if (Palette != null && !el.Resources.MergedDictionaries.Contains(Palette)) el.Resources.MergedDictionaries.Add(Palette);
+        try { el.Resources.MergedDictionaries.Add(NewPalette()); } catch { }
         return el;
     }
 
