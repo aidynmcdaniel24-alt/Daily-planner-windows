@@ -229,6 +229,13 @@ public static class Auth
         File.WriteAllBytes(SessionFile, ProtectedData.Protect(raw, null, DataProtectionScope.CurrentUser));
     }
 
+    // Deletes the sign-in account itself (the planner data is deleted first by the caller)
+    public static async Task DeleteAccount() =>
+        await Http.PostJson(IdBase + "delete" + Key, new JsonObject { ["idToken"] = await Token() });
+
+    // Firebase only lets you delete an account right after logging in
+    public static bool RecentLogin => Current != null && DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - Current.LoginAt < 5 * 60 * 1000;
+
     public static void SignOut()
     {
         Current = null;

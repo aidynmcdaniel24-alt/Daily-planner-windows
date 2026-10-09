@@ -27,6 +27,20 @@ public static class Http
         return await Send(req);
     }
 
+    // Like PostJson, but returns the raw text (for answers that are a list instead of an object)
+    public static async Task<string> PostRaw(string url, JsonObject body, string bearer)
+    {
+        using var req = new HttpRequestMessage(HttpMethod.Post, url)
+        {
+            Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json")
+        };
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", bearer);
+        using var res = await Client.SendAsync(req);
+        var text = await res.Content.ReadAsStringAsync();
+        if (!res.IsSuccessStatusCode) throw new ApiException(ErrorCode(text), (int)res.StatusCode);
+        return text;
+    }
+
     public static async Task<JsonObject> PostForm(string url, Dictionary<string, string> form)
     {
         using var req = new HttpRequestMessage(HttpMethod.Post, url) { Content = new FormUrlEncodedContent(form) };

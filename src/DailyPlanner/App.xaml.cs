@@ -36,7 +36,9 @@ public partial class App : Application
         try
         {
             Store.Load();
+            Notify.Start();
             Window = new MainWindow();
+            Window.Closed += (s, e) => Notify.Stop();
             Store.Ui = Window.DispatcherQueue;
             Window.Activate();
             Window.Start();

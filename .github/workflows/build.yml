@@ -17,6 +17,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Get the latest drills, ranks, quotes and projects from the website
+      - uses: actions/checkout@v4
+        with:
+          repository: aidynmcdaniel24-alt/Daily-planner
+          path: web
+
+      - name: Copy the website's game data into the app
+        run: node tools/export-data.js web src/DailyPlanner/Assets/data.json
+
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: 8.0.x

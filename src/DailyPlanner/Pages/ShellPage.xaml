@@ -26,8 +26,18 @@
                 <NavigationViewItem x:Name="NavCoding" Content="Coding" Tag="coding">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE943;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
+                <NavigationViewItem x:Name="NavSummary" Content="Summary" Tag="summary">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE9D2;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
+                <NavigationViewItemSeparator />
+                <NavigationViewItem x:Name="NavBoard" Content="Leaderboard" Tag="board">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xE734;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
             </NavigationView.MenuItems>
             <NavigationView.FooterMenuItems>
+                <NavigationViewItem Content="Focus mode" Tag="focus" SelectsOnInvoked="False">
+                    <NavigationViewItem.Icon><FontIcon Glyph="&#xF272;" /></NavigationViewItem.Icon>
+                </NavigationViewItem>
                 <NavigationViewItem Content="Open the website" Tag="web" SelectsOnInvoked="False">
                     <NavigationViewItem.Icon><FontIcon Glyph="&#xE774;" /></NavigationViewItem.Icon>
                 </NavigationViewItem>
@@ -38,6 +48,8 @@
                 <!-- Pops up when a checklist is finished -->
                 <InfoBar x:Name="Toast" IsOpen="False" Severity="Success" IsClosable="True"
                          HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="24" MaxWidth="460" />
+                <Button x:Name="ExitFocus" Content="Exit focus mode" Style="{StaticResource AccentButtonStyle}" Visibility="Collapsed"
+                        HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,24" Padding="18,10" Click="ExitFocus_Click" />
                 <!-- Saving indicator -->
                 <StackPanel x:Name="SyncBadge" Orientation="Horizontal" Spacing="8" Opacity="0"
                             HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,14,22,0">

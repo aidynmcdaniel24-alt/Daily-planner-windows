@@ -19,6 +19,7 @@ public static class Store
     public static event Action? Changed;          // anything in the planner changed (redraw)
     public static event Action<string>? Finished; // a whole checklist was just finished
     public static event Action? Kicked;           // "Log out of all devices" was used somewhere else
+    public static event Action? Saved;            // the person changed something (after it's written)
     public static DispatcherQueue? Ui { get; set; }
 
     // Reads a number from the data, whatever form it was saved in
@@ -50,6 +51,7 @@ public static class Store
         WriteFile();
         QueuePush();
         Raise();
+        Saved?.Invoke();
     }
 
     public static void Replace(JsonObject next)
@@ -74,34 +76,14 @@ public static class Store
         (St["gl"]?.ToString() ?? "").Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries);
 
     // ---------- Today's checklists ----------
-    // Uses the lists the website saved (st.lists), then custom lists (st.ct), then simple defaults
+    // The person's own edited list (st.ct) if they have one, otherwise the built-in plan
     public static List<(string Title, string Note)> Tasks(string lane)
     {
-        var lists = St["lists"] as JsonObject;
-        JsonNode? src = null;
-        if (lists != null)
-        {
-            if (lane == "gaming")
-            {
-                var g = lists["gaming"] as JsonObject;
-                src = FullDay ? g?["full"] ?? g?["short"] : g?["short"] ?? g?["full"];
-            }
-            else src = lists[lane];
-        }
-        src ??= (St["ct"] as JsonObject)?[lane];
-        var parsed = Parse(src);
-        return parsed.Count > 0 ? parsed : Defaults(lane);
+        var custom = Parse((St["ct"] as JsonObject)?[lane]);
+        return custom.Count > 0 ? custom : Plan.Defaults(lane);
     }
 
-    public static bool FullDay
-    {
-        get
-        {
-            var fd = (St["fd"] as JsonArray) ?? ((St["lists"] as JsonObject)?["fd"] as JsonArray);
-            var days = fd?.Select(x => (int)Num(x, -1)).ToList() ?? new List<int> { 0, 1, 2 };
-            return days.Contains(Weekday);
-        }
-    }
+    public static bool FullDay => Plan.FullDay;
 
     static List<(string, string)> Parse(JsonNode? n)
     {
@@ -113,14 +95,37 @@ public static class Store
         return list;
     }
 
-    static List<(string, string)> Defaults(string lane) => lane switch
+    // Saves an edited list (same place the website keeps it)
+    public static void SetTasks(string lane, List<(string Title, string Note)> list, List<int>? doneToday = null)
     {
-        "gaming" => FullDay
-            ? new() { ("Wake up at your set time", "Water and food first"), ("Tech learning, 45 min", "Check the Coding tab"), ("Practice warm-up, 15 min", "One drill for your game"), ("Practice games 1, 60-90 min", "Bring your focus goal into every game"), ("Break, 15 min", "Walk, water, no screen"), ("Practice games 2, 60-90 min", "Stop early on the 2-loss rule"), ("Review one game, 15 min", "What would you do differently?") }
-            : new() { ("Practice warm-up, 10 min", "One drill for your game"), ("Tech learning, 20-30 min", "Even a little keeps the streak"), ("Practice games, 60 min", "Only if you have time"), ("Write one fix", "Quick note, then done") },
-        "sleep" => new() { ("Pick tonight's bedtime", "Same time as work allows"), ("No ranked in the last hour", "Wind down instead"), ("Screens off 30-60 min before bed", "Dim lights, stretch"), ("Skip late caffeine", "Water instead"), ("Wake at your set time", "No snooze spiral") },
-        _ => new() { ("Study 20-45 min", "CS50, freeCodeCamp, or The Odin Project"), ("Build or fix one small thing", "Even a tiny script counts"), ("Add a line to your learning log", "On the website's Coding tab"), ("Push your work to GitHub", "If you made something today") },
-    };
+        var ct = Obj("ct");
+        ct[lane] = new JsonArray(list.Select(t => (JsonNode?)new JsonArray(t.Title, t.Note)).ToArray());
+        if (doneToday != null) Obj("dn")[Td() + lane] = new JsonArray(doneToday.Select(x => (JsonNode?)x).ToArray());
+        UpdateFinished(lane);
+        Save();
+    }
+
+    public static void ResetTasks(string lane)
+    {
+        Obj("ct").Remove(lane);
+        Obj("dn").Remove(Td() + lane);
+        UpdateFinished(lane);
+        Save();
+    }
+
+    // ---------- Small helpers for reading and writing the data ----------
+    public static JsonObject Obj(string key) => Obj(St, key);
+    public static JsonObject Obj(JsonObject parent, string key)
+    {
+        if (parent[key] is JsonObject o) return o;
+        var n = new JsonObject(); parent[key] = n; return n;
+    }
+    public static JsonArray Arr(string key)
+    {
+        if (St[key] is JsonArray a) return a;
+        var n = new JsonArray(); St[key] = n; return n;
+    }
+    public static string Str(string key) => St[key]?.ToString() ?? "";
 
     public static List<int> Done(string lane)
     {
@@ -150,17 +155,20 @@ public static class Store
         if (!done) list.Remove(index);
         dn[Td() + lane] = new JsonArray(list.Select(x => (JsonNode?)x).ToArray());
 
-        // Mark the day finished (this is what streaks count), same as the website
-        var ok = St["ok"] as JsonObject ?? new JsonObject();
-        St["ok"] = ok;
-        var (k, n) = Count(lane);
-        if (n > 0 && k == n) ok[lane + Td()] = 1; else ok.Remove(lane + Td());
-
+        UpdateFinished(lane);
         Save();
         if (!wasFinished && IsFinished(lane)) Finished?.Invoke(lane);
     }
 
-    static bool IsFinished(string lane) => (St["ok"] as JsonObject)?.ContainsKey(lane + Td()) == true;
+    // Marks the day finished (this is what streaks count), same as the website
+    static void UpdateFinished(string lane)
+    {
+        var ok = Obj("ok");
+        var (k, n) = Count(lane);
+        if (n > 0 && k == n) ok[lane + Td()] = 1; else ok.Remove(lane + Td());
+    }
+
+    public static bool IsFinished(string lane) => (St["ok"] as JsonObject)?.ContainsKey(lane + Td()) == true;
 
     // Days in a row with the whole checklist done
     public static int Streak(string lane)
