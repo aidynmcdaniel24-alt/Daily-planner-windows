@@ -46,9 +46,21 @@ public static class Plan
         }
     }
 
+    // What the daily practice task is called. Shooter players who picked an aim trainer get its name ("Aim Lab training").
+    public static string Skill(JsonObject G)
+    {
+        string at = (Store.St["ob"] as JsonObject)?["at"]?.ToString() ?? "";
+        if (at.Length > 0 && GameData.GenreId(Store.St) == "fps")
+        {
+            var t = GameData.AimTrainers().FirstOrDefault(x => x.Id == at);
+            if (t.Task is { Length: > 0 }) return t.Task + (at == "range" ? "" : " training");
+        }
+        return GameData.G(G, "skill");
+    }
+
     static string Words(string t, JsonObject G) => t
-        .Replace("@skill", GameData.G(G, "skill")).Replace("@play", GameData.G(G, "play"))
-        .Replace("Aim training", GameData.G(G, "skill")).Replace("Aim warm-up", GameData.G(G, "skill") + " warm-up")
+        .Replace("@skill", Skill(G)).Replace("@play", GameData.G(G, "play"))
+        .Replace("Aim training", Skill(G)).Replace("Aim warm-up", Skill(G) + " warm-up")
         .Replace("Ranked block", GameData.G(G, "play"));
 
     // The built-in list for a lane (before the person's own edits)
@@ -59,7 +71,7 @@ public static class Plan
         if (lane == "coding") return new() { ("Study 20-45 min", "CS50, freeCodeCamp, or The Odin Project"), ("Build or fix one small thing", "Even a tiny script counts"), ("Add a line to your learning log", "Below on this tab"), ("Push your work to GitHub", "If you made something today") };
 
         var G = GameData.Genre(st); bool full = FullDay; string foc = Focus;
-        string skill = GameData.G(G, "skill"), play = GameData.G(G, "play"), review = GameData.G(G, "review");
+        string skill = Skill(G), play = GameData.G(G, "play"), review = GameData.G(G, "review");
         if (st["plan"] is JsonObject P && P["full"] is JsonArray)
         {
             var src = (full ? P["full"] : P["short"]) as JsonArray ?? new JsonArray();

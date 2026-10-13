@@ -163,7 +163,26 @@ public sealed partial class SettingsPage : Page
         foreach (var g in order) type.Items.Add(new ComboBoxItem { Content = GameData.GenreName(g), Tag = g });
         void SelectType() { var id = GameData.GenreId(Store.St); type.SelectedItem = type.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == id); }
         SelectType();
-        void Status() { var G = GameData.Genre(Store.St); aiStatus.Text = G["ai"] != null ? "Using a custom AI plan for " + G["game"] + "." : "Using the built-in plan for this game type. (Custom AI plans are made on the website.)"; }
+        // Aim trainer (only shown for shooters)
+        var aim = new ComboBox { Header = "Aim trainer", HorizontalAlignment = HorizontalAlignment.Stretch };
+        aim.Items.Add(new ComboBoxItem { Content = "Not set", Tag = "" });
+        foreach (var t in GameData.AimTrainers()) aim.Items.Add(new ComboBoxItem { Content = t.Name, Tag = t.Id });
+        void AimRow()
+        {
+            aim.Visibility = GameData.GenreId(Store.St) == "fps" ? Visibility.Visible : Visibility.Collapsed;
+            string cur = (Store.St["ob"] as JsonObject)?["at"]?.ToString() ?? "";
+            aim.SelectedItem = aim.Items.OfType<ComboBoxItem>().FirstOrDefault(i => (string)i.Tag == cur) ?? aim.Items[0];
+        }
+        AimRow();
+        aim.SelectionChanged += (s, e) =>
+        {
+            if (loading || aim.SelectedItem is not ComboBoxItem it) return;
+            var ob = Store.Obj("ob"); string v = (string)it.Tag;
+            if ((ob["at"]?.ToString() ?? "") == v) return;
+            if (v.Length > 0) ob["at"] = v; else ob.Remove("at");
+            Store.Save();
+        };
+        void Status() { AimRow(); var G = GameData.Genre(Store.St); aiStatus.Text = G["ai"] != null ? "Using a custom AI plan for " + G["game"] + "." : "Using the built-in plan for this game type. (Custom AI plans are made on the website.)"; }
         Status();
         game.TextChanged += (s, e) =>
         {
@@ -206,7 +225,7 @@ public sealed partial class SettingsPage : Page
             for (int i = 0; i < 7; i++) if (days.Children[i] is ToggleButton tb) tb.Content = tiny ? names[i][..1] : names[i];
         };
         return UI.Card("", "Game and schedule", "What you play and which days you have more time.", UI.Lane("gaming"), null,
-            game, type, UI.M("This picks your drills and score labels. Change it if we guessed wrong.", 12), aiStatus,
+            game, type, UI.M("This picks your drills and score labels. Change it if we guessed wrong.", 12), aiStatus, aim,
             UI.T("Full days (longer routine)", 13, true), days);
     }
 

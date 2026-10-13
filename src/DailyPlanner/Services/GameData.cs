@@ -138,6 +138,11 @@ public static class GameData
         ((Data["CODE_SITES"] as JsonArray) ?? new JsonArray()).OfType<JsonArray>().Where(a => a.Count >= 5)
             .Select(a => new Site(a[0]!.ToString(), a[1]!.ToString(), a[2]!.ToString(), a[3]!.ToString(), Strings(a[4]))).ToList();
 
+    // Aim trainers: (id, name shown, what the practice task is called)
+    public static List<(string Id, string Name, string Task)> AimTrainers() =>
+        ((Data["AIM_TRAINERS"] as JsonArray) ?? new JsonArray()).OfType<JsonArray>()
+            .Select(a => (a[0]?.ToString() ?? "", a[1]?.ToString() ?? "", a.Count > 2 ? a[2]?.ToString() ?? "" : "")).ToList();
+
     // [type, title, description] — type "p" is Python, "w" is web
     public static List<(string Type, string Title, string Desc)> Projects() => projects ??= ReadProjects();
     static List<(string Type, string Title, string Desc)> ReadProjects() =>
